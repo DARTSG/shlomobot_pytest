@@ -1,4 +1,5 @@
 import inspect
+import re
 from types import ModuleType
 from typing import Dict, List, Union
 
@@ -15,6 +16,15 @@ def find_functions(file: ModuleType) -> List:
         for _, fn in inspect.getmembers(file, inspect.isfunction)
         if fn.__module__ == file.__name__
     ]
+    return functions
+
+
+def extract_functions_in_order(file_code: str) -> List:
+    """
+    Returns a list of functions within a file in original order
+    """
+    functions = re.findall(r"def ([\s\S]+?)\([\s\S]*?\)", file_code)
+
     return functions
 
 

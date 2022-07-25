@@ -39,12 +39,16 @@ def check_main_func_order(file_function_dict: Dict[str, List[str]]) -> List:
     """
     filenames = []
     for filename in file_function_dict.keys():
-        functions = extract_functions_in_order(filename)
+        file = filename.rstrip(".py")
+        user_file = import_module(file)
+        file_code = inspect.getsource(user_file)
+        functions = extract_functions_in_order(file_code)
 
         # Check if file contains 'main' function and if it is last
-        for function in functions:
-            if function == "main" and functions[-1] != function:
-                filenames.append(filename)
+        if functions:
+            for function in functions:
+                if function == "main" and functions[-1] != function:
+                    filenames.append(filename)
 
     return filenames
 
@@ -118,6 +122,3 @@ def check_main_function(file_function_dict: Dict[str, List[str]]) -> int:
         error_count = 1
 
     return error_count
-
-
-print(check_main_func_order({"pretest.py": []}))
