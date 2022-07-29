@@ -24,13 +24,12 @@ Create a dictionary that contains the filename as the key and the list of functi
 FILE_FUNCTION_MAP = {"sample_test.py": ["main", "function1", "function2"]}
 ```
 
-Parse the appropriate variable (list of filenames or whole dictionary) into the Pytest function and obtain the results as output (i.e. For 'check_missing_docstrings' function, it returns a list of functions that are missing docstrings)
+Parse the appropriate variable (list of filenames or whole dictionary) into the Pytest function and obtain the results as output (i.e. For `check_missing_docstrings` function, it returns a list of functions that are missing docstrings)
 ```python
 functions_with_missing_docstrings = check_missing_docstrings(FILE_FUNCTION_MAP)
 ```
 
-Use the 'create_custom_error_json' function to create a custom error message that will be raised if the results output contains errors as well as to calculate the number of points to be deducted
-The function requires 4 parameters:
+Use the `create_custom_error_json` function to create a custom error message that will be raised if the results output contains errors as well as to calculate the number of points to be deducted. The function requires 4 parameters:
 * feedback: The custom error message to be raised
 * points_per_error: The number of points to deduct for every error detected
 * max_points_deducted: The limit to the number of points to be deducted for a certain type of error
@@ -38,7 +37,7 @@ The function requires 4 parameters:
 ```python
 from shlomobot_pytest.utils import create_custom_error_json
 
-feedback = f"Use double quotes for docstrings for the following function(s): {'/'.join(functions_with_missing_docstrings)}!"
+feedback = f"The following function(s) are missing docstrings: {'/'.join(functions_with_missing_docstrings)}!"
 points_per_error = 10
 max_points_deducted = 50
 number_of_errors = len(functions_with_missing_docstrings)
