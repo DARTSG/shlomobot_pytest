@@ -29,6 +29,7 @@ def check_user_function(
     Returns a dict consisting of function that was wrongly named
     and filename where function is located in
     """
+    functions = []
     for filename, functions in file_function_dict.items():
         try:
             file = filename.rstrip(".py")
@@ -36,19 +37,32 @@ def check_user_function(
             for function in functions:
                 callable(getattr(user_file, function))
         except AttributeError:
-            return {"filename": filename, "function": function}
-    return {"filename": None, "function": None}
+            functions.append(function)
+    return functions
 
 
-def pep8_conformance(file_function_dict: Dict[str, List[str]]) -> int:
+def pep8_conformance(file_list: List[str]) -> Dict[str, List[str]]:
     """
     Test that we conform to PEP8.
 
-    Returns the total number of Pep8 errors detected
+    Returns a dictionary with the filename as key and list of Pep8 error comments as values
+    e.g. errors = {
+        "sample_test.py":
+        [
+            "Row 9: Col 30: 'E201' whitespace after '('",
+            "Row 9: Col 71: 'E202' whitespace before ')'"
+        ]
+    }
     """
-    filenames = file_function_dict.keys()
+    errors = {}
     pep8style = pep8.StyleGuide()
-    result = pep8style.check_files(filenames)
-    if result.total_errors != 0:
-        print("Found code style errors (and warnings).")
-    return result.total_errors
+    for file in file_list:
+        result = pep8style.check_files([file])
+        if result.total_errors != 0:
+            error_messages = []
+            for error in result._deferred_print:
+                error_message = f"Row {error[0]}: Col {error[1]}: {error[2]} {error[3]}"
+                error_messages.append(error_message)
+            errors[result.filename] = error_messages
+
+    return errors

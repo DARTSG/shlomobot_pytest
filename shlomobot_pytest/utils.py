@@ -1,7 +1,7 @@
 import inspect
 import re
 from types import ModuleType
-from typing import Dict, List, Union
+from typing import List
 
 
 def find_functions(file: ModuleType) -> List:
@@ -29,16 +29,19 @@ def extract_functions_in_order(file_code: str) -> List:
 
 
 def create_custom_error_json(
-    custom_variables: Dict[str, Union[str, int]],
+    feedback: str,
+    points_per_error: int,
+    max_points_deducted: int,
+    number_of_errors: int,
 ) -> str:
     """Returns a constructed custom error message"""
 
     total_points_deducted = calculate_total_deducted_score(
-        custom_variables["points_per_error"],
-        custom_variables["max_points_deducted"],
-        custom_variables["number_of_errors"],
+        points_per_error,
+        max_points_deducted,
+        number_of_errors,
     )
-    custom_error_message = f'{{"feedback": "{custom_variables["feedback"]}", "points_deducted": {total_points_deducted}}} EndMarker'
+    custom_error_message = f'{{"feedback": "{feedback}", "points_deducted": {total_points_deducted}}} EndMarker'
 
     return custom_error_message
 

@@ -6,14 +6,14 @@ import re
 from typing import Dict, List
 
 
-def check_name_main_statement(file_function_dict: Dict[str, List[str]]) -> int:
+def check_name_main_statement(file_function_dict: Dict[str, List[str]]) -> bool:
     """
     Check if the "if __name__ == '__main__'" statement is present
 
-    Returns a variable 'error count' 0 or 1; 1 if the statement is absent in all files
+    Returns a boolean whether the __name__ == '__main__' statement exists or not
     """
     statement_present_files = []
-    error_count = 0
+    name_main_statement_exists = True
     for filename in file_function_dict.keys():
         file = filename.rstrip(".py")
         user_file = import_module(file)
@@ -27,8 +27,8 @@ def check_name_main_statement(file_function_dict: Dict[str, List[str]]) -> int:
         if name_main_line:
             statement_present_files.append(filename)
     if not statement_present_files:
-        error_count = 1
-    return error_count
+        name_main_statement_exists = False
+    return name_main_statement_exists
 
 
 def check_main_func_order(file_function_dict: Dict[str, List[str]]) -> List:
@@ -106,10 +106,10 @@ def check_main_function(file_function_dict: Dict[str, List[str]]) -> int:
     """
     Check if the user created a 'main' function
 
-    Returns a variable 'error_count' 0 or 1; 1 if main function is absent in all files
+    Returns a boolean whether the 'main' function exists or not
     """
     main_func_present = []
-    error_count = 0
+    main_function_exists = True
     for filename in file_function_dict.keys():
         try:
             file = filename.rstrip(".py")
@@ -119,6 +119,6 @@ def check_main_function(file_function_dict: Dict[str, List[str]]) -> int:
         except AttributeError:
             pass
     if not main_func_present:
-        error_count = 1
+        main_function_exists = False
 
-    return error_count
+    return main_function_exists
