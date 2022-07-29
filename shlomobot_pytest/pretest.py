@@ -9,15 +9,15 @@ def check_user_file(file_list: List[str]) -> List:
 
     Returns a list of filenames that were wrongly named
     """
-    filenames = []
+    wrongly_named_files = []
     for filename in file_list:
         try:
             file = filename.rstrip(".py")
             import_module(file)
         except ImportError:
-            filenames.append(filename)
+            wrongly_named_files.append(filename)
 
-    return filenames
+    return wrongly_named_files
 
 
 def check_user_function(
@@ -26,10 +26,9 @@ def check_user_function(
     """
     Check if function in user submitted code is correctly named
 
-    Returns a dict consisting of function that was wrongly named
-    and filename where function is located in
+    Returns a dict consisting of function(s) that was wrongly named
     """
-    functions = []
+    wrongly_named_functions = []
     for filename, functions in file_function_dict.items():
         try:
             file = filename.rstrip(".py")
@@ -37,8 +36,8 @@ def check_user_function(
             for function in functions:
                 callable(getattr(user_file, function))
         except AttributeError:
-            functions.append(function)
-    return functions
+            wrongly_named_functions.append(function)
+    return wrongly_named_functions
 
 
 def pep8_conformance(file_list: List[str]) -> Dict[str, List[str]]:
