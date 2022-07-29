@@ -36,6 +36,8 @@ The function requires 4 parameters:
 * max_points_deducted: The limit to the number of points to be deducted for a certain type of error
 * number_of_errors: Total number of errors detected
 ```python
+from shlomobot_pytest.utils import create_custom_error_json
+
 feedback = f"Use double quotes for docstrings for the following function(s): {'/'.join(functions_with_missing_docstrings)}!"
 points_per_error = 10
 max_points_deducted = 50
