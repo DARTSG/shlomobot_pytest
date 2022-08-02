@@ -68,8 +68,6 @@ def pep8_conformance(file_list: list[str]) -> dict[str, list[str]]:
             "Row 9: Col 71: 'E202' whitespace before ')'"
         ]
     }
-
-    And also the total number of errors found
     """
     errors = defaultdict(list)
     pep8style = pep8.StyleGuide()

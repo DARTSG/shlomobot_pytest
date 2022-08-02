@@ -14,9 +14,7 @@ import re
 
 def contains_name_eq_main_statement(module_name: str) -> bool:
     """
-    Check if the "if __name__ == '__main__'" statement is present
-
-    Returns a boolean whether the __name__ == '__main__' statement exists or not
+    Checks if the "if __name__ == '__main__'" statement is present
     """
     stripped_module_name = module_name.rstrip(".py")
     module = import_module(stripped_module_name)
@@ -31,7 +29,7 @@ def contains_name_eq_main_statement(module_name: str) -> bool:
 
 
 def is_main_function_last(module_name: str) -> bool:
-    """Check if the 'main' function is the last function"""
+    """Checks if the 'main' function is the last function"""
     stripped_module_name = module_name.rstrip(".py")
     module = import_module(stripped_module_name)
     module_code = inspect.getsource(module)
@@ -43,7 +41,7 @@ def is_main_function_last(module_name: str) -> bool:
 
 def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
     """
-    Check if the user created docstrings for all functions except 'main' function
+    Checks if the user created docstrings for all functions except 'main' function
 
     Returns a list of functions where docstrings are missing
     """
@@ -92,7 +90,7 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
 
 def contains_main_function(module_name: str) -> bool:
     """
-    Check if the 'main' function exists within module
+    Checks if the 'main' function exists within module
     """
     stripped_module_name = module_name.rstrip(".py")
     module = import_module(stripped_module_name)
