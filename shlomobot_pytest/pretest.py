@@ -1,9 +1,12 @@
+"""This module contains test functions that are primarily needed for all test files"""
+
+from collections import defaultdict
 import pep8
 from importlib import import_module
-from typing import Dict, List, Union
+from pathlib import Path
 
 
-def check_user_file(file_list: List[str]) -> List:
+def find_missing_expected_files(file_list: list[str]) -> list[str]:
     """
     Check if the user submitted the correct file name
 
@@ -12,35 +15,48 @@ def check_user_file(file_list: List[str]) -> List:
     wrongly_named_files = []
     for filename in file_list:
         try:
-            file = filename.rstrip(".py")
-            import_module(file)
+            if filename.endswith(".py"):
+                # If its a python file try to import it
+                python_module = filename.rstrip(".py")
+                import_module(python_module)
+            else:
+                # If not just make sure it exists
+                if not Path(filename).exists():
+                    wrongly_named_files.append(filename)
         except ImportError:
             wrongly_named_files.append(filename)
 
     return wrongly_named_files
 
 
-def check_user_function(
-    file_function_dict: Dict[str, List[str]]
-) -> Dict[str, Union[str, None]]:
+def find_missing_expected_functions(
+    expected_functions_map: dict[str, list[str]]
+) -> list[str]:
     """
-    Check if function in user submitted code is correctly named
+    Check if all of the expected functions in the submitted python file exist
 
-    Returns a dict consisting of function(s) that was wrongly named
+    expected_functions_map is a dictionary mapping file names to a list of
+    expected functions in that file
+
+    Returns a list of all missing functions
     """
     wrongly_named_functions = []
-    for filename, functions in file_function_dict.items():
-        try:
-            file = filename.rstrip(".py")
-            user_file = import_module(file)
-            for function in functions:
+    for filename, functions in expected_functions_map.items():
+        if not filename.endswith(".py"):
+            raise ValueError("We can only check for functions in python modules")
+
+        python_module = filename.rstrip(".py")
+        user_file = import_module(python_module)
+        for function in functions:
+            try:
                 callable(getattr(user_file, function))
-        except AttributeError:
-            wrongly_named_functions.append(function)
+            except AttributeError:
+                wrongly_named_functions.append(function)
+
     return wrongly_named_functions
 
 
-def pep8_conformance(file_list: List[str]) -> Dict[str, List[str]]:
+def pep8_conformance(file_list: list[str]) -> dict[str, list[str]]:
     """
     Test that we conform to PEP8.
 
@@ -52,16 +68,20 @@ def pep8_conformance(file_list: List[str]) -> Dict[str, List[str]]:
             "Row 9: Col 71: 'E202' whitespace before ')'"
         ]
     }
+
+    And also the total number of errors found
     """
-    errors = {}
+    errors = defaultdict(list)
     pep8style = pep8.StyleGuide()
-    for file in file_list:
-        result = pep8style.check_files([file])
+
+    # We loop and test the files for pep8 conformance one by one because otherwise
+    # we won't be able to map errors to the file they came from
+    for python_module in file_list:
+        result = pep8style.check_files([python_module])
         if result.total_errors != 0:
-            error_messages = []
-            for error in result._deferred_print:
-                error_message = f"Row {error[0]}: Col {error[1]}: {error[2]} {error[3]}"
-                error_messages.append(error_message)
-            errors[result.filename] = error_messages
+            for row, column, error_code, error_message, _ in result._deferred_print:
+                errors[result.filename].append(
+                    f"Row {row}: Col {column}: {error_code} {error_message}"
+                )
 
     return errors

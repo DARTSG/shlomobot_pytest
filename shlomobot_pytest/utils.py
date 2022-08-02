@@ -1,27 +1,23 @@
 import inspect
 import re
-from types import ModuleType
-from typing import List
+from types import ModuleType, FunctionType
 
 
-def find_functions(file: ModuleType) -> List:
+def extract_functions(module: ModuleType) -> list[FunctionType]:
     """
-    Returns the list of functions within a file
-
-    :param file: file module (product of import_module)
-    :type file: module
+    Find a list of functions present within file
     """
-    functions = [
-        fn
-        for _, fn in inspect.getmembers(file, inspect.isfunction)
-        if fn.__module__ == file.__name__
-    ]
+    functions = []
+    for _, func in inspect.getmembers(module, inspect.isfunction):
+        if func.__module__ == module.__name__:
+            functions.append(func)
+
     return functions
 
 
-def extract_functions_in_order(file_code: str) -> List:
+def extract_functions_in_order(file_code: str) -> list[str]:
     """
-    Returns a list of functions within a file in original order
+    Find a list of function strings within a file while keeping its original order
     """
     functions = re.findall(r"def ([\s\S]+?)\([\s\S]*?\)", file_code)
 
@@ -34,24 +30,21 @@ def create_custom_error_json(
     max_points_deducted: int,
     number_of_errors: int,
 ) -> str:
-    """Returns a constructed custom error message"""
+    """Creates a custom error message for the test files"""
 
     total_points_deducted = calculate_total_deducted_score(
         points_per_error,
         max_points_deducted,
         number_of_errors,
     )
-    custom_error_message = f'{{"feedback": "{feedback}", "points_deducted": {total_points_deducted}}} EndMarker'
 
-    return custom_error_message
+    return f'{{"feedback": "{feedback}", "points_deducted": {total_points_deducted}}} EndMarker'
 
 
 def calculate_total_deducted_score(
     points_per_error: int, max_points_deducted: int, number_of_errors: int
 ) -> int:
-    """Returns the total number of points to be deducted"""
+    """Calculates the total number of points to be deducted"""
     total_points_deducted = points_per_error * number_of_errors
-    if total_points_deducted > max_points_deducted:
-        total_points_deducted = max_points_deducted
 
-    return total_points_deducted
+    return max(total_points_deducted, max_points_deducted)
