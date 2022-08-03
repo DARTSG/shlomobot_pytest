@@ -5,7 +5,7 @@ This module contains test functions that are optional for the test files dependi
 from importlib import import_module
 
 from shlomobot_pytest.utils import (
-    find_functions_within_file,
+    extract_functions,
     extract_functions_in_order,
 )
 import inspect
@@ -50,7 +50,7 @@ def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
         stripped_module_name = filename.rstrip(".py")
         module = import_module(stripped_module_name)
         # Find the list of functions within the file
-        functions = find_functions_within_file(module)
+        functions = extract_functions(module)
         for function in functions:
             # Skip checking docstrings for 'main' function
             if function.__name__ == "main":
@@ -73,7 +73,7 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
         stripped_module_name = filename.rstrip(".py")
         module = import_module(stripped_module_name)
         # Find the list of functions within the file
-        functions = find_functions_within_file(module)
+        functions = extract_functions(module)
         for function in functions:
             # Skip checking docstrings for 'main' function
             if function.__name__ == "main":
