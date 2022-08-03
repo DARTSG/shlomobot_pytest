@@ -47,4 +47,4 @@ def calculate_total_deducted_score(
     """Calculates the total number of points to be deducted"""
     total_points_deducted = points_per_error * number_of_errors
 
-    return max(total_points_deducted, max_points_deducted)
+    return min(total_points_deducted, max_points_deducted)
