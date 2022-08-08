@@ -1,3 +1,9 @@
+"""
+This module contain assertion functions whereby points per error
+and max points to be deducted remain primarily default on most occasions;
+The custom error messages to be raised mainly remain the same also
+"""
+
 from shlomobot_pytest.pretest import (
     find_missing_expected_files,
     find_missing_expected_functions,
