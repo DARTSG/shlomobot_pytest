@@ -12,7 +12,7 @@ def assert_missing_expected_files(
     points_per_error: int = 100,
     max_points_deducted: int = 100,
 ):
-    """Assert that no expected files are missing; If missing, raise a custom error message"""
+    """Assert that no expected files are missing"""
 
     wrongly_named_files = find_missing_expected_files(filenames_list)
 
@@ -31,7 +31,7 @@ def assert_missing_expected_functions(
     points_per_error: int = 100,
     max_points_deducted: int = 100,
 ):
-    """Assert that no expected functions are missing; If missing, raise a custom error message"""
+    """Assert that no expected functions are missing"""
 
     wrongly_named_functions = find_missing_expected_functions(file_function_map)
 
@@ -50,7 +50,7 @@ def assert_pep8_conformance(
     points_per_error: int = 5,
     max_points_deducted: int = 30,
 ):
-    """Assert that Pep8 is conformed to; If not, raise a custom error message with the errors"""
+    """Assert that Pep8 is conformed to"""
     pep8_errors = pep8_conformance(filenames_list)
 
     combined_errors_string_list = []
