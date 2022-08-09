@@ -25,9 +25,9 @@ def extract_functions_in_order(file_code: str) -> list[str]:
 
 
 def create_custom_error_json(
-    feedback: str,
     points_per_error: int,
     max_points_deducted: int,
+    feedback: str,
     number_of_errors: int,
 ) -> str:
     """Creates a custom error message for the test files"""
