@@ -18,7 +18,7 @@ setup(
     version=VERSION,
     description="ShlomoBOT helper library for test files",
     author_email="",
-    url="https://github.com/DARTSG/shlomobot-pytest",
+    url="https://github.com/DARTSG/shlomobot_pytest",
     keywords=["ShlomoBOT", "Pytest"],
     install_requires=requirements,
     packages=find_packages(),
