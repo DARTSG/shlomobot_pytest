@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-NAME = "shlomobot-pytest"
+NAME = "shlomobot_pytest"
 VERSION = "1.0.0"
 # To install the library, run the following
 #
