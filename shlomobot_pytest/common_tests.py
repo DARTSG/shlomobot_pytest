@@ -10,13 +10,14 @@ from shlomobot_pytest.utils import (
 )
 import inspect
 import re
+from os.path import splitext
 
 
 def contains_name_eq_main_statement(module_name: str) -> bool:
     """
     Checks if the "if __name__ == '__main__'" statement is present
     """
-    stripped_module_name = module_name.rstrip(".py")
+    stripped_module_name, _ = splitext(module_name)
     module = import_module(stripped_module_name)
     module_code = inspect.getsource(module)
 
@@ -30,7 +31,7 @@ def contains_name_eq_main_statement(module_name: str) -> bool:
 
 def is_main_function_last(module_name: str) -> bool:
     """Checks if the 'main' function is the last function"""
-    stripped_module_name = module_name.rstrip(".py")
+    stripped_module_name, _ = splitext(module_name)
     module = import_module(stripped_module_name)
     module_code = inspect.getsource(module)
     functions = extract_functions_in_order(module_code)
@@ -47,7 +48,7 @@ def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
     """
     func_missing_docstrings = []
     for filename in file_list:
-        stripped_module_name = filename.rstrip(".py")
+        stripped_module_name, _ = splitext(filename)
         module = import_module(stripped_module_name)
         # Find the list of functions within the file
         functions = extract_functions(module)
@@ -70,7 +71,7 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
     """
     single_quote_docstrings = []
     for filename in file_list:
-        stripped_module_name = filename.rstrip(".py")
+        stripped_module_name, _ = splitext(filename)
         module = import_module(stripped_module_name)
         # Find the list of functions within the file
         functions = extract_functions(module)
@@ -92,7 +93,7 @@ def contains_main_function(module_name: str) -> bool:
     """
     Checks if the 'main' function exists within module
     """
-    stripped_module_name = module_name.rstrip(".py")
+    stripped_module_name, _ = splitext(module_name)
     module = import_module(stripped_module_name)
     try:
         callable(getattr(module, "main"))

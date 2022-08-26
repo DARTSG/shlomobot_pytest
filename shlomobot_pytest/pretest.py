@@ -4,6 +4,7 @@ from collections import defaultdict
 import pep8
 from importlib import import_module
 from pathlib import Path
+from os.path import splitext
 
 
 def find_missing_expected_files(file_list: list[str]) -> list[str]:
@@ -17,7 +18,7 @@ def find_missing_expected_files(file_list: list[str]) -> list[str]:
         try:
             if filename.endswith(".py"):
                 # If its a python file try to import it
-                python_module = filename.rstrip(".py")
+                python_module, _ = splitext(filename)
                 import_module(python_module)
             else:
                 # If not just make sure it exists
@@ -45,7 +46,7 @@ def find_missing_expected_functions(
         if not filename.endswith(".py"):
             raise ValueError("We can only check for functions in python modules")
 
-        python_module = filename.rstrip(".py")
+        python_module, _ = splitext(filename)
         user_file = import_module(python_module)
         for function in functions:
             try:
