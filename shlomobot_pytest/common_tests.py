@@ -8,6 +8,7 @@ from shlomobot_pytest.utils import (
     extract_functions,
     extract_functions_in_order,
 )
+import builtins
 import inspect
 import re
 
@@ -99,3 +100,42 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def builtins_not_used_as_variable(file_list: list[str]) -> bool:
+    """
+    Checks if inside the files given in 'file_list' any builtins are used as variables
+
+    Return True if no builtins are used as variables, False if at least one is.
+    """
+    builtins_not_used_as_variable = True
+    builtins_list = dir(builtins)[80:]
+    function_codes = []
+
+    builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
+    builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
+
+    for filename in file_list:
+        stripped_module_name = filename.removesuffix(".py")
+        module = import_module(stripped_module_name)
+        # Find the list of functions within the file
+        functions = extract_functions(module)
+        for function in functions:
+            function_code = inspect.getsource(function)
+            function_codes.append((function.__name__, function_code))
+
+    # for each builtin check in each function if it exists as a paramater, or as a variable
+    for function_name, function in function_codes:
+        for builtin_word in builtins_list:
+            builtin_as_variable_regex = builtin_used_as_variable.format(builtin_word)
+            builtin_as_paramater_regex = builtin_given_to_function.format(
+                function_name, builtin_word
+            )
+            builtin_as_variable_regex = re.compile(builtin_as_variable_regex)
+            builtin_as_paramater_regex = re.compile(builtin_as_paramater_regex)
+            occurences_as_variable = re.search(builtin_as_variable_regex, function)
+            occurences_as_paramater = re.search(builtin_as_paramater_regex, function)
+            if occurences_as_variable or occurences_as_paramater:
+                builtins_not_used_as_variable = False
+
+    return builtins_not_used_as_variable
