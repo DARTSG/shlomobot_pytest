@@ -139,3 +139,23 @@ def builtins_not_used_as_variable(file_list: list[str]) -> bool:
                 builtins_not_used_as_variable = False
 
     return builtins_not_used_as_variable
+
+
+def declared_global_variable(file_list: list[str]) -> bool:
+    """
+    checks if in the code of the files inside file_list there was decleration of a global variable
+    """
+    global_variable_declared = False
+    global_decleration_regex = r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n"
+    
+    for filename in file_list:
+        stripped_module_name = filename.removesuffix(".py")
+        module = import_module(stripped_module_name)
+        # Find the list of functions within the file
+        functions = extract_functions(module)
+        for function in functions:
+            function_code = inspect.getsource(function)
+            if re.search(global_decleration_regex, function_code):
+                global_variable_declared = True
+
+    return global_variable_declared
