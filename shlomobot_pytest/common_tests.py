@@ -99,3 +99,20 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def test_function_exists_and_contains_asserts(module_name: str) -> bool:
+    """Checks that the tests function uses assert to test the function"""
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    try:
+        callable(getattr(module, "test"))
+        functions = extract_functions(module)
+        test_function = [
+            function for function in functions if function.__name__ == "test"
+        ]
+        user_tests_function_code = inspect.getsource(test_function[0])
+
+        return " assert " in user_tests_function_code
+    except AttributeError:
+        return False
