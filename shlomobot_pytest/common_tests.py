@@ -99,3 +99,19 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def contains_user_input(module_name: str, function_name_list: list[str]) -> bool:
+    """checks for user input in the functions in function_name list, inside of the given module"""
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    module_code = inspect.getsource(module)
+    functions = extract_functions_in_order(module_code)
+
+    for function in functions:
+        if function.__name__ in function_name_list and not re.search(
+            r"input\(\w+", function
+        ):
+            return False
+
+    return True
