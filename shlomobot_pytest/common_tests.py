@@ -99,3 +99,24 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def contains_loops(module_name: str, function_name_list: list[str]) -> bool:
+    """checks for loops in the functions in function_name list, inside of the given module"""
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    module_code = inspect.getsource(module)
+    functions = extract_functions_in_order(module_code)
+
+    for_loop_regex_pattern = r"for\s+\w+\s+in\s+\w+"
+    while_loop_regex_pattern = r"while\s+.+"
+
+    for function in functions:
+        if function.__name__ in function_name_list:
+            function_code = inspect.getsource(function)
+            if not re.search(for_loop_regex_pattern, function_code) and not re.search(
+                while_loop_regex_pattern, function_code
+            ):
+                return False
+
+    return True
