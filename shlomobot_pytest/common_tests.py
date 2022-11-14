@@ -99,3 +99,21 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def contains_with_open(module_name: str, function_name_list: list[str]) -> bool:
+    """checks for loops in the functions in function_name list, inside of the given module"""
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    module_code = inspect.getsource(module)
+    functions = extract_functions_in_order(module_code)
+
+    with_open_regex_pattern = r"with\s+open\(['\"]"
+
+    for function in functions:
+        if function.__name__ in function_name_list and not re.search(
+            with_open_regex_pattern, inspect.getsource(function)
+        ):
+            return False
+
+    return True
