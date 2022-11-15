@@ -51,18 +51,18 @@ def calculate_total_deducted_score(
     return min(total_points_deducted, max_points_deducted)
 
 
-def import_pyfile(module_name: str) -> FunctionType:
+def import_pyfile(module_name: str) -> ModuleType:
+    """Extracts the module from a given filename"""
     stripped_module_name = module_name.removesuffix(".py")
-    module = import_module(stripped_module_name)
 
-    return module
+    return import_module(stripped_module_name)
 
 
 def get_functions_from_files(file_list: str) -> list[FunctionType]:
-    function_list = []
-
+    """
+    Extracts all functions from the files in file_list
+    Creates a generator that returns a filename, FunctionType object pair
+    """
     for filename in file_list:
         module = import_pyfile(filename)
-        function_list += extract_functions(module)
-
-    return function_list
+        yield filename, extract_functions(module)

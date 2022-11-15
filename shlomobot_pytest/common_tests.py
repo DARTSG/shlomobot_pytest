@@ -98,7 +98,7 @@ def builtins_not_used_as_variable(file_list: list[str]) -> bool:
 
     Return True if no builtins are used as variables, False if at least one is.
     """
-    builtins_list = dir(builtins)[80:]
+    builtins_list = [word for word in dir(builtins) if not re.match("[A-Z|_]", word[0])]
     functions_list = get_functions_from_files(file_list)
 
     builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
