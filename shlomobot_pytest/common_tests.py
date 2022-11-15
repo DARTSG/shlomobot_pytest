@@ -137,3 +137,26 @@ def declared_global_variable(file_list: list[str]) -> bool:
             return True
 
     return False
+
+
+def every_opened_file_is_closed(file_list: list[str]) -> bool:
+    """
+    Checks if all files opened in the module given are also closed
+    Only checks for files not using the with open method
+    """
+
+    functions_list = get_functions_from_files(file_list)
+
+    open_regex = r"(\w+)\s*=\s*open\("
+    close_regex = r"{0}\.close\("
+
+    for function in functions_list:
+        # function is a tuple of the function name and object, but in this case only the object is needed
+        function_code = inspect.getsource(function[1])
+        file_names = re.findall(open_regex, function_code)
+        for file_name in file_names:
+            new_close_regex = close_regex.format(file_name)
+            if not re.search(new_close_regex, function_code):
+                return False
+
+    return True
