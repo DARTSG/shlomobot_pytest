@@ -137,3 +137,17 @@ def declared_global_variable(file_list: list[str]) -> bool:
             return True
 
     return False
+
+
+def contains_user_input(file_list: list[str], function_name_list: list[str]) -> bool:
+    """checks for user input in the functions in function_name list, inside of the given module"""
+
+    functions_list = get_functions_from_files(file_list)
+
+    for function_name, function in functions_list:
+        if function_name in function_name_list and not re.search(
+            r"input\(\w+", inspect.getsource(function)
+        ):
+            return False
+
+    return True
