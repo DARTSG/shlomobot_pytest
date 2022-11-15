@@ -46,13 +46,13 @@ def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
     functions_list = get_functions_from_files(file_list)
 
     func_missing_docstrings = []
-    for function in functions_list:
+    for function_name, function in functions_list:
         # Skip checking docstrings for 'main' function
-        if function.__name__ == "main":
+        if function_name == "main":
             continue
         # Handle missing docstrings
         if not function.__doc__:
-            func_missing_docstrings.append(function.__name__)
+            func_missing_docstrings.append(function_name)
 
     return func_missing_docstrings
 
@@ -66,16 +66,16 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
     single_quote_docstrings = []
     functions_list = get_functions_from_files(file_list)
 
-    for function in functions_list:
+    for function_name, function in functions_list:
         # Skip checking docstrings for 'main' function
-        if function.__name__ == "main":
+        if function_name == "main":
             continue
         # Handle double quotes check if docstrings exist
         if function.__doc__:
             func_code = inspect.getsource(function)
             dbl_quotes_docstring = re.search(r"\"\"\"[\s\S]*?\"\"\"", func_code)
             if not dbl_quotes_docstring:
-                single_quote_docstrings.append(function.__name__)
+                single_quote_docstrings.append(function_name)
 
     return single_quote_docstrings
 
@@ -104,14 +104,14 @@ def builtins_not_used_as_variable(file_list: list[str]) -> bool:
     builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
     builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
 
-    for function in functions_list:
+    for function_name, function in functions_list:
         # extract function code
         function_code = inspect.getsource(function)
         # look for all possible builtin words used in the function
         for builtin_word in builtins_list:
             builtin_as_variable_regex = builtin_used_as_variable.format(builtin_word)
             builtin_as_paramater_regex = builtin_given_to_function.format(
-                function.__name__, builtin_word
+                function_name, builtin_word
             )
             occurences_as_variable = re.search(builtin_as_variable_regex, function_code)
             occurences_as_paramater = re.search(
@@ -134,7 +134,8 @@ def declared_global_variable(file_list: list[str]) -> bool:
     functions_list = get_functions_from_files(file_list)
 
     for function in functions_list:
-        function_code = inspect.getsource(function)
+        # function is a tuple of the function name and object, but in this case only the object is needed
+        function_code = inspect.getsource(function[1])
         if re.search(global_decleration_regex, function_code):
             return True
 
