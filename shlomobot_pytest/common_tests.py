@@ -108,9 +108,7 @@ def builtins_not_used_as_variable(file_list: list[str]) -> bool:
 
     Return True if no builtins are used as variables, False if at least one is.
     """
-    builtins_not_used_as_variable = True
     builtins_list = dir(builtins)[80:]
-    function_codes = []
 
     builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
     builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
@@ -121,24 +119,26 @@ def builtins_not_used_as_variable(file_list: list[str]) -> bool:
         # Find the list of functions within the file
         functions = extract_functions(module)
         for function in functions:
+            # extract function code
             function_code = inspect.getsource(function)
-            function_codes.append((function.__name__, function_code))
+            # look for all possible builtin words used in the function
+            for builtin_word in builtins_list:
+                builtin_as_variable_regex = builtin_used_as_variable.format(
+                    builtin_word
+                )
+                builtin_as_paramater_regex = builtin_given_to_function.format(
+                    function.__name__, builtin_word
+                )
+                occurences_as_variable = re.search(
+                    builtin_as_variable_regex, function_code
+                )
+                occurences_as_paramater = re.search(
+                    builtin_as_paramater_regex, function_code
+                )
+                if occurences_as_variable or occurences_as_paramater:
+                    return False
 
-    # for each builtin check in each function if it exists as a paramater, or as a variable
-    for function_name, function in function_codes:
-        for builtin_word in builtins_list:
-            builtin_as_variable_regex = builtin_used_as_variable.format(builtin_word)
-            builtin_as_paramater_regex = builtin_given_to_function.format(
-                function_name, builtin_word
-            )
-            builtin_as_variable_regex = re.compile(builtin_as_variable_regex)
-            builtin_as_paramater_regex = re.compile(builtin_as_paramater_regex)
-            occurences_as_variable = re.search(builtin_as_variable_regex, function)
-            occurences_as_paramater = re.search(builtin_as_paramater_regex, function)
-            if occurences_as_variable or occurences_as_paramater:
-                builtins_not_used_as_variable = False
-
-    return builtins_not_used_as_variable
+    return True
 
 
 def declared_global_variable(file_list: list[str]) -> bool:
@@ -147,7 +147,7 @@ def declared_global_variable(file_list: list[str]) -> bool:
     """
     global_variable_declared = False
     global_decleration_regex = r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n"
-    
+
     for filename in file_list:
         stripped_module_name = filename.removesuffix(".py")
         module = import_module(stripped_module_name)
