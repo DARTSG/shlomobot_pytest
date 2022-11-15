@@ -137,3 +137,25 @@ def declared_global_variable(file_list: list[str]) -> bool:
             return True
 
     return False
+
+
+def contains_loops(file_list: list[str], function_name_list: list[str]) -> bool:
+    """
+    Checks for loops in the functions in function_name list,
+    Inside of the given modules in file_list
+    """
+
+    functions_list = get_functions_from_files(file_list)
+
+    for_loop_regex_pattern = r"for\s+\w+\s+in\s+\w+"
+    while_loop_regex_pattern = r"while\s+.+"
+
+    for function_name, function in functions_list:
+        if function_name in function_name_list:
+            function_code = inspect.getsource(function)
+            if not re.search(for_loop_regex_pattern, function_code) and not re.search(
+                while_loop_regex_pattern, function_code
+            ):
+                return False
+
+    return True

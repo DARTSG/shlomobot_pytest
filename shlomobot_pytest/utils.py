@@ -58,7 +58,7 @@ def import_pyfile(module_name: str) -> ModuleType:
     return import_module(stripped_module_name)
 
 
-def get_functions_from_files(file_list: str) -> list[FunctionType]:
+def get_functions_from_files(file_list: list[str]) -> list[FunctionType]:
     """
     Extracts all functions from the files in file_list
     Creates a generator that returns a filename, FunctionType object pair
