@@ -99,3 +99,14 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
+    """Checks if the sutdent imported all the required modules from import_list"""
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    module_code = inspect.getsource(module)
+
+    modules_list = re.findall(r"import (\w+)", module_code)
+
+    return all([True if module in modules_list else False for module in import_list])
