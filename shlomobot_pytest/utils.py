@@ -9,11 +9,11 @@ from io import StringIO
 def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
     """
     A fixture to simulate input-output of a python file.
-    This should be called with the filename parameter, and than the input(s) as *args.
+    This should be called with the python filename parameter, and than the input(s) as *args.
     Each given argument is equivalent to 1 line of input (splitted by \\n)
     """
 
-    def wrapper(*args, filename):
+    def wrapper(*args, pyfile):
         send_input_string = ""
         
         # Converting args to list, to maintain the order of the recived inputs.
@@ -21,7 +21,7 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
             send_input_string += str(item) + "\n"
         monkeypatch.setattr(sys, 'stdin', StringIO(send_input_string))
 
-        with open(filename, 'r') as f:
+        with open(pyfile, 'r') as f:
             exec(f.read())
         user_output = capsys.readouterr().out
         return user_output
