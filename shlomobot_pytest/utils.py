@@ -6,14 +6,14 @@ import sys
 from io import StringIO
 
 @pytest.fixture()
-def simulate_input_output(monkeypatch, capsys: pytest.CaptureFixture):
+def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
     """
     A fixture to simulate input-output of a python file.
     This should be called with the filename parameter, and than the input(s) as *args.
     Each given argument is equivalent to 1 line of input (splitted by \\n)
     """
 
-    def _internal(filename="", *args):
+    def wrapper(*args, filename):
         send_input_string = ""
         
         # Converting args to list, to maintain the order of the recived inputs.
@@ -26,7 +26,7 @@ def simulate_input_output(monkeypatch, capsys: pytest.CaptureFixture):
         user_output = capsys.readouterr().out
         return user_output
 
-    return _internal
+    return wrapper
 
 
 def extract_functions(module: ModuleType) -> list[FunctionType]:
