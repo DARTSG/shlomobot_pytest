@@ -1,5 +1,6 @@
-import inspect
 import re
+import inspect
+from importlib import import_module
 from types import ModuleType, FunctionType
 
 
@@ -48,3 +49,20 @@ def calculate_total_deducted_score(
     total_points_deducted = points_per_error * number_of_errors
 
     return min(total_points_deducted, max_points_deducted)
+
+
+def import_pyfile(module_name: str) -> FunctionType:
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+
+    return module
+
+
+def get_functions_from_files(file_list: str) -> list[FunctionType]:
+    function_list = []
+
+    for filename in file_list:
+        module = import_pyfile(filename)
+        function_list += extract_functions(module)
+
+    return function_list
