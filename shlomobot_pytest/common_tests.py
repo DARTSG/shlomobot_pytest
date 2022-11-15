@@ -99,3 +99,34 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def every_opened_file_is_closed(module_name: str) -> bool:
+    """
+    Checks if all files opened in the module given are also closed
+    Only checks for files not using the with open method
+    """
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    functions = extract_functions(module)
+
+    open_regex = r"(\w+)\s*=\s*open\("
+    close_regex = r"{0}\.close\("
+    file_names = []
+    function_codes = []
+
+    for function in functions:
+        function_code = inspect.getsource(function)
+        file_names += re.findall(open_regex, function_code)
+        function_codes.append(function_code)
+
+    for file_name in file_names:
+        file_closed = False
+        new_close_regex = close_regex.format(file_name)
+        for function_code in function_codes:
+            if re.search(new_close_regex, function_code):
+                file_closed = True
+        if not file_closed:
+            return False
+
+    return True
