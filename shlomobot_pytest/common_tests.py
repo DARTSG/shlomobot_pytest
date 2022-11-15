@@ -150,6 +150,8 @@ def every_opened_file_is_closed(file_list: list[str]) -> bool:
     open_regex = r"(\w+)\s*=\s*open\("
     close_regex = r"{0}\.close\("
 
+    files_not_yet_closed = []
+
     for function in functions_list:
         # function is a tuple of the function name and object, but in this case only the object is needed
         function_code = inspect.getsource(function[1])
@@ -157,6 +159,13 @@ def every_opened_file_is_closed(file_list: list[str]) -> bool:
         for file_name in file_names:
             new_close_regex = close_regex.format(file_name)
             if not re.search(new_close_regex, function_code):
-                return False
+                files_not_yet_closed.append((file_name, new_close_regex))
 
-    return True
+    tmp_files_not_closed_list = files_not_yet_closed.copy()
+    for function in functions_list:
+        function_code = inspect.getsource(function[1])
+        for file_name, new_close_regex in tmp_files_not_closed_list:
+            if re.search(new_close_regex, function_code):
+                files_not_yet_closed.remove((file_name, new_close_regex))
+
+    return len(files_not_yet_closed) == 0
