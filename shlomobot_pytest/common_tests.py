@@ -99,3 +99,16 @@ def contains_main_function(module_name: str) -> bool:
         return True
     except AttributeError:
         return False
+
+
+def using_absolute_paths(module_name: str) -> bool:
+    """ """
+    stripped_module_name = module_name.removesuffix(".py")
+    module = import_module(stripped_module_name)
+    module_code = inspect.getsource(module)
+
+    absolute_path_regex = r'\w+\s*=\s*[\'"][a-zA-Z]:'
+    if re.search(absolute_path_regex, module_code):
+        return True
+
+    return False
