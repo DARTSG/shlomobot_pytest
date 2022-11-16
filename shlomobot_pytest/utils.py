@@ -97,19 +97,38 @@ def get_functions_from_files(file_list: list[str]) -> list[FunctionType]:
 
 def count_function_lines(function_code: str) -> int:
     """Counts the amount on non comment or docstring lines in a function code"""
-    comment_regex = r"^\s*#"
-    docstring_regex = r'^\s*[\'"]+'
+
+    one_line_docstring_regex = r'^\t*\s*[\'"]+\w+[\'"]+'
+    open_docstring_regex = r'^[\t\s]*?([\'"]+)'
+    close_docstring_regex = r'.*?([\'"]+)$'
+    comment_regex = r"^\t*\s*#"
     define_regex = r"^\s*def "
     line_counter = 0
-    is_docstring_active = False
+    docstring_state = {"is_active": False, "value": ""}
 
     for line in function_code.splitlines():
-        if not re.search(comment_regex, line) and not re.search(define_regex, line):
-            if re.search(docstring_regex, line) and not is_docstring_active:
-                is_docstring_active = True
-            elif re.search(docstring_regex, line) and is_docstring_active:
-                is_docstring_active = False
-            elif not re.search(docstring_regex, line) and not is_docstring_active:
+        if (
+            not re.search(comment_regex, line)
+            and not re.search(define_regex, line)
+            and not re.search(one_line_docstring_regex, line)
+        ):
+            if (
+                re.search(open_docstring_regex, line)
+                and not docstring_state["is_active"]
+            ):
+                docstring_state["is_active"] = True
+                docstring_state["value"] = re.match(open_docstring_regex, line).group()
+            elif (
+                re.search(close_docstring_regex, line)
+                and docstring_state["is_active"]
+                and (
+                    re.match(close_docstring_regex, line).group()
+                    == docstring_state["value"]
+                )
+            ):
+                docstring_state["is_active"] = False
+                docstring_state["value"] = ""
+            elif not docstring_state["is_active"]:
                 line_counter += 1
 
     return line_counter
