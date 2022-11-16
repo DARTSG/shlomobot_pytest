@@ -114,10 +114,8 @@ def get_clean_function_lines(function: FunctionType) -> list[str]:
     docstring_state = {"is_active": False, "value": ""}
 
     for line in function_code.splitlines():
-        if (
-            not re.search(COMMENT_REGEX, line)
-            and not re.search(DEFINE_REGEX, line)
-            and not re.search(ONE_LINE_DOCSTRING_REGEX, line)
+        if not re.search(COMMENT_REGEX, line) and not re.search(
+            ONE_LINE_DOCSTRING_REGEX, line
         ):
             open_match = re.match(OPEN_DOCSTRING_REGEX, line)
             close_match = re.match(CLOSE_DOCSTRING_REGEX, line)

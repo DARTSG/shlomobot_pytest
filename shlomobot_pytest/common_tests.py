@@ -148,6 +148,6 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
     module = import_pyfile(py_filename)
 
     if hasattr(module, function_name):
-        return len(get_clean_function_lines(getattr(module, function_name))) == 1
+        return len(get_clean_function_lines(getattr(module, function_name))) == 2
 
     return False
