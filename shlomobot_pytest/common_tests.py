@@ -12,11 +12,11 @@ import inspect
 import re
 
 
-def contains_name_eq_main_statement(module_name: str) -> bool:
+def contains_name_eq_main_statement(py_filename: str) -> bool:
     """
     Checks if the "if __name__ == '__main__'" statement is present
     """
-    module = import_pyfile(module_name)
+    module = import_pyfile(py_filename)
     module_code = inspect.getsource(module)
 
     # Check for __name__ == "__main__" statement
@@ -27,9 +27,9 @@ def contains_name_eq_main_statement(module_name: str) -> bool:
     return name_eq_main_match is not None
 
 
-def is_main_function_last(module_name: str) -> bool:
+def is_main_function_last(py_filename: str) -> bool:
     """Checks if the 'main' function is the last function"""
-    module = import_pyfile(module_name)
+    module = import_pyfile(py_filename)
     module_code = inspect.getsource(module)
     functions = extract_functions_in_order(module_code)
 
@@ -80,11 +80,11 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
     return single_quote_docstrings
 
 
-def contains_main_function(module_name: str) -> bool:
+def contains_main_function(py_filename: str) -> bool:
     """
     Checks if the 'main' function exists within module
     """
-    module = import_pyfile(module_name)
+    module = import_pyfile(py_filename)
     try:
         callable(getattr(module, "main"))
         return True
@@ -142,10 +142,10 @@ def declared_global_variable(file_list: list[str]) -> bool:
     return False
 
 
-def function_is_one_liner(module_name: str, function_name: str) -> bool:
+def function_is_one_liner(py_filename: str, function_name: str) -> bool:
     """Checks if a given function is a one liner"""
 
-    module = import_pyfile(module_name)
+    module = import_pyfile(py_filename)
 
     if hasattr(module, function_name):
         return len(get_clean_function_lines(getattr(module, function_name))) == 1
