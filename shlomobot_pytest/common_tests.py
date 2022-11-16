@@ -60,7 +60,6 @@ def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
 def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[str]:
     """
     Check if the user created docstrings using double or single quotes
-
     Returns a list of functions where single quotes were used for docstrings
     """
     single_quote_docstrings = []
