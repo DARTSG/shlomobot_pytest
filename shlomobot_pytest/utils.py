@@ -11,11 +11,11 @@ from types import ModuleType, FunctionType
 
 # ================= CONSTANTS =================
 
-ONE_LINE_DOCSTRING_REGEX = r'^\t*\s*[\'"]+\w+[\'"]+'
-OPEN_DOCSTRING_REGEX = r'^[\t\s]*?([\'"]+)'
-CLOSE_DOCSTRING_REGEX = r'.*?([\'"]+)$'
-COMMENT_REGEX = r"^\t*\s*#"
-DEFINE_REGEX = r"^\s*def "
+ONE_LINE_DOCSTRING_REGEX = re.compile(r'^\t*\s*[\'"]+\w+[\'"]+')
+OPEN_DOCSTRING_REGEX = re.compile(r'^[\t\s]*?([\'"]{3})')
+CLOSE_DOCSTRING_REGEX = re.compile(r'.*?([\'"]{3})$')
+COMMENT_REGEX = re.compile(r"^\t*\s*#")
+DEFINE_REGEX = re.compile(r"^\s*def ")
 
 
 @pytest.fixture()
@@ -96,7 +96,9 @@ def import_pyfile(py_filename: str) -> ModuleType:
     return import_module(stripped_module_name)
 
 
-def get_functions_from_files(file_list: list[str]) -> Generator:
+def get_functions_from_files(
+    file_list: list[str],
+) -> Generator[tuple[str, list[FunctionType]], None, None]:
     """
     Extracts all functions from the files in file_list
     Creates a generator that returns a filename, FunctionType object pair
@@ -111,36 +113,35 @@ def get_clean_function_lines(function: FunctionType) -> list[str]:
 
     clean_lines = []
     function_code = inspect.getsource(function)
-    docstring_state = {"is_active": False, "value": ""}
+    docstring_type = ""
 
     for line in function_code.splitlines():
+        # Do not count commented line or single line docstring
         if not re.search(COMMENT_REGEX, line) and not re.search(
             ONE_LINE_DOCSTRING_REGEX, line
         ):
             open_match = re.match(OPEN_DOCSTRING_REGEX, line)
             close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
 
-            if open_match and not docstring_state["is_active"]:
-                docstring_state["is_active"] = True
-                docstring_state["value"] = open_match.group()
-            elif (
-                close_match
-                and docstring_state["is_active"]
-                and (close_match.group() == docstring_state["value"])
-            ):
-                docstring_state["is_active"] = False
-                docstring_state["value"] = ""
-            elif not docstring_state["is_active"]:
+            # check if a multi-line docstring has started
+            if open_match and docstring_type == "":
+                docstring_type = open_match.group()
+
+            # Check if the previous multi-line docstring has closed
+            elif close_match and (close_match.group() == docstring_type):
+                docstring_type = ""
+
+            elif docstring_type == "":
                 clean_lines.append(line)
 
     return clean_lines
 
 
-def function_contains_regex(regex: str, function: FunctionType) -> bool:
+def function_contains_regex(regex: str | re.Pattern, function: FunctionType) -> bool:
     """Checks if the function contains a specific regular expression"""
-    return any(
-        [
-            True if re.search(regex, line) else False
-            for line in get_clean_function_lines(function)
-        ]
-    )
+
+    for line in get_clean_function_lines(function):
+        if re.search(regex, line):
+            return True
+
+    return False
