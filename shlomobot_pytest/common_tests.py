@@ -45,7 +45,6 @@ def is_main_function_last(py_filename: str) -> bool:
 def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
     """
     Checks if the user created docstrings for all functions except 'main' function
-
     Returns a list of functions where docstrings are missing
     """
 
@@ -143,8 +142,7 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 
 def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
     """Checks if the sutdent imported all the required modules from import_list"""
-    stripped_module_name = module_name.removesuffix(".py")
-    module = import_module(stripped_module_name)
+    module = import_pyfile(module_name)
     module_code = inspect.getsource(module)
 
     modules_list = re.findall(r"import (\w+)", module_code)
