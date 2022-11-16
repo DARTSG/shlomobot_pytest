@@ -5,7 +5,7 @@ from shlomobot_pytest.utils import (
     extract_functions_in_order,
     import_pyfile,
     get_functions_from_files,
-    count_function_lines,
+    get_clean_function_lines,
 )
 import builtins
 import inspect
@@ -148,7 +148,6 @@ def function_is_one_liner(module_name: str, function_name: str) -> bool:
     module = import_pyfile(module_name)
 
     if hasattr(module, function_name):
-        function_code = inspect.getsource(getattr(module, function_name))
-        return count_function_lines(function_code) == 1
+        return len(get_clean_function_lines(getattr(module, function_name))) == 1
 
     return False
