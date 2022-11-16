@@ -137,3 +137,16 @@ def declared_global_variable(file_list: list[str]) -> bool:
             return True
 
     return False
+
+
+def using_absolute_paths(module_name: str) -> bool:
+    """Checks whether a variable created uses absolute paths"""
+    module = import_pyfile(module_name)
+    module_code = inspect.getsource(module)
+
+    # check for a string variable containing quote followed by one capital letter and a colon
+    absolute_path_regex = r'\w+\s*=\s*[\'"][a-zA-Z]:'
+    if re.search(absolute_path_regex, module_code):
+        return True
+
+    return False
