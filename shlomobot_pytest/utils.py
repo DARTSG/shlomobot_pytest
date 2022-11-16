@@ -5,7 +5,7 @@ import sys
 import pytest
 import inspect
 from io import StringIO
-from typing import Generator
+from typing import Iterator
 from importlib import import_module
 from types import ModuleType, FunctionType
 
@@ -98,14 +98,15 @@ def import_pyfile(py_filename: str) -> ModuleType:
 
 def get_functions_from_files(
     file_list: list[str],
-) -> Generator[tuple[str, list[FunctionType]], None, None]:
+) -> Iterator[tuple[str, FunctionType]]:
     """
     Extracts all functions from the files in file_list
     Creates a generator that returns a filename, FunctionType object pair
     """
     for py_filename in file_list:
         module = import_pyfile(py_filename)
-        yield py_filename, extract_functions(module)
+        for function in extract_functions(module):
+            yield function.__name__, function
 
 
 def get_clean_function_lines(function: FunctionType) -> list[str]:

@@ -6,10 +6,14 @@ from shlomobot_pytest.utils import (
     import_pyfile,
     get_functions_from_files,
     get_clean_function_lines,
+    function_contains_regex,
 )
+from types import ModuleType, FunctionType
 import builtins
 import inspect
 import re
+
+GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
@@ -68,7 +72,7 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
 
     for function_name, function in functions_list:
         # Skip checking docstrings for 'main' function
-        if function_name == "main":
+        if function.__name__ == "main":
             continue
         # Handle double quotes check if docstrings exist
         if function.__doc__:
@@ -92,54 +96,36 @@ def contains_main_function(py_filename: str) -> bool:
         return False
 
 
-def builtins_not_used_as_variable(file_list: list[str]) -> bool:
+def builtins_not_used_as_variable(function: FunctionType) -> bool:
     """
-    Checks if inside the files given in 'file_list' any builtins are used as variables
-
-    Return True if no builtins are used as variables, False if at least one is.
+    Return True if no builtins are used as variables in the function, else return True
     """
-    builtins_list = [word for word in dir(builtins) if not re.match("[A-Z|_]", word[0])]
-    functions_list = get_functions_from_files(file_list)
-
     builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
     builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
+    builtins_list = [word for word in dir(builtins) if not re.match("[A-Z|_]", word[0])]
+    functions_lines = get_clean_function_lines(function)
+    function_name = function.__name__
 
-    for function_name, function in functions_list:
-        # extract function code
-        function_code = inspect.getsource(function)
+    for line in functions_lines:
         # look for all possible builtin words used in the function
         for builtin_word in builtins_list:
             builtin_as_variable_regex = builtin_used_as_variable.format(builtin_word)
             builtin_as_paramater_regex = builtin_given_to_function.format(
                 function_name, builtin_word
             )
-            occurences_as_variable = re.search(builtin_as_variable_regex, function_code)
-            occurences_as_paramater = re.search(
-                builtin_as_paramater_regex, function_code
-            )
+            occurences_as_variable = re.search(builtin_as_variable_regex, line)
+            occurences_as_paramater = re.search(builtin_as_paramater_regex, line)
             if occurences_as_variable or occurences_as_paramater:
                 return False
 
     return True
 
 
-def declared_global_variable(file_list: list[str]) -> bool:
+def function_contains_global_variable(function: FunctionType) -> bool:
     """
-    checks if in the code of the files inside file_list there was decleration of a global variable
+    checks if in the function contains a global variable decleration
     """
-    global_decleration_regex = re.compile(
-        r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n"
-    )
-
-    functions_list = get_functions_from_files(file_list)
-
-    for function in functions_list:
-        # function is a tuple of the function name and object, but in this case only the object is needed
-        function_code = inspect.getsource(function[1])
-        if re.search(global_decleration_regex, function_code):
-            return True
-
-    return False
+    return function_contains_regex(GLOBAL_DECLERATION_REGEX, function)
 
 
 def function_is_one_liner(py_filename: str, function_name: str) -> bool:
@@ -148,6 +134,7 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
     module = import_pyfile(py_filename)
 
     if hasattr(module, function_name):
+        # Length is 2 since def line is also counted
         return len(get_clean_function_lines(getattr(module, function_name))) == 2
 
     return False
