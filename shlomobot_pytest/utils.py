@@ -6,6 +6,7 @@ import pytest
 import sys
 from io import StringIO
 
+
 @pytest.fixture()
 def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
     """
@@ -16,13 +17,13 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
 
     def wrapper(*args, pyfile):
         send_input_string = ""
-        
+
         # Converting args to list, to maintain the order of the recived inputs.
         for item in args:
             send_input_string += str(item) + "\n"
-        monkeypatch.setattr(sys, 'stdin', StringIO(send_input_string))
+        monkeypatch.setattr(sys, "stdin", StringIO(send_input_string))
 
-        with open(pyfile, 'r') as f:
+        with open(pyfile, "r") as f:
             exec(f.read())
         user_output = capsys.readouterr().out
         return user_output
@@ -92,3 +93,23 @@ def get_functions_from_files(file_list: list[str]) -> list[FunctionType]:
     for filename in file_list:
         module = import_pyfile(filename)
         yield filename, extract_functions(module)
+
+
+def count_function_lines(function_code: str) -> int:
+    """Counts the amount on non comment or docstring lines in a function code"""
+    comment_regex = r"^\s*#"
+    docstring_regex = r'^\s*[\'"]+'
+    define_regex = r"^\s*def "
+    line_counter = 0
+    is_docstring_active = False
+
+    for line in function_code.splitlines():
+        if not re.search(comment_regex, line) and not re.search(define_regex, line):
+            if re.search(docstring_regex, line) and not is_docstring_active:
+                is_docstring_active = True
+            elif re.search(docstring_regex, line) and is_docstring_active:
+                is_docstring_active = False
+            elif not re.search(docstring_regex, line) and not is_docstring_active:
+                line_counter += 1
+
+    return line_counter

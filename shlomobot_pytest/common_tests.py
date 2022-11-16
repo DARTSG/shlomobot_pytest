@@ -5,6 +5,7 @@ from shlomobot_pytest.utils import (
     extract_functions_in_order,
     import_pyfile,
     get_functions_from_files,
+    count_function_lines,
 )
 import builtins
 import inspect
@@ -137,5 +138,17 @@ def declared_global_variable(file_list: list[str]) -> bool:
         function_code = inspect.getsource(function[1])
         if re.search(global_decleration_regex, function_code):
             return True
+
+    return False
+
+
+def function_is_one_liner(module_name: str, function_name: str) -> bool:
+    """Checks if a given function is a one liner"""
+
+    module = import_pyfile(module_name)
+
+    if hasattr(module, function_name):
+        function_code = inspect.getsource(getattr(module, function_name))
+        return count_function_lines(function_code) == 1
 
     return False
