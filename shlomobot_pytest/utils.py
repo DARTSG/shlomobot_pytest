@@ -117,41 +117,41 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
         function_code = format_str(function_code, mode=FileMode(line_length=99999))
 
     # Using filter to remove empty lines from the list of lines
-    split_code = list(filter(None, function_code.splitlines()))
+    split_code = [
+        line.lstrip() for line in list(filter(None, function_code.splitlines()))
+    ]
 
     # The first line will be the definition of the function
     clean_lines = [split_code[0]]
     docstring_type = ""
 
-    for line in split_code[1:]:
+    for line_num, line in enumerate(split_code[1:]):
         # Do not count commented line or single line docstring
         if not re.search(COMMENT_REGEX, line) and not re.search(
             ONE_LINE_DOCSTRING_REGEX, line
         ):
+            # From second line onward, when no docstring is active add lines to the list
+            if line_num != 0 and docstring_type == "":
+                clean_lines.append(line)
 
-            # check if a multi-line docstring has started
-            # since there is only one line of code before a docstring (the def line)
-            # then when the docstring starts the length of the line list has to be 1
-            if docstring_type == "" and len(clean_lines) == 1:
+            # Check for opening multi-line docstring in the start of the code
+            if line_num == 0:
                 open_match = re.match(OPEN_DOCSTRING_REGEX, line)
                 if open_match:
                     docstring_type = open_match.group()
 
-            # Check if the previous multi-line docstring has closed
-            elif docstring_type != "":
+            # Check for closing of multi-line docstring second line onward
+            elif line_num != 0 and docstring_type != "":
                 close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
                 if close_match and (close_match.group() == docstring_type):
                     docstring_type = ""
-
-            else:
-                clean_lines.append(line)
 
     return clean_lines
 
 
 def function_contains_regex(regex: str | re.Pattern, function: FunctionType) -> bool:
     """Checks if the function contains a specific regular expression"""
-    if type(regex) != re.Pattern:
+    if isinstance(regex, re.Pattern):
         regex = re.compile(regex)
 
     for line in get_clean_function_lines(function):
