@@ -7,6 +7,7 @@ import inspect
 from io import StringIO
 from typing import Iterator
 from importlib import import_module
+from black import format_str, FileMode
 from types import ModuleType, FunctionType
 
 # ================= CONSTANTS =================
@@ -109,14 +110,19 @@ def get_functions_from_files(
             yield function.__name__, function
 
 
-def get_clean_function_lines(function: FunctionType) -> list[str]:
-    """Counts the amount on non comment or docstring lines in a function code"""
-
-    clean_lines = []
+def get_clean_function_lines(function: FunctionType, should_black=True) -> list[str]:
+    """Count the amount on non comment or docstring lines in a function code"""
     function_code = inspect.getsource(function)
+
+    # reformats file to connect split lines and remove empty lines
+    if should_black:
+        function_code = format_str(function_code, mode=FileMode(line_length=99999))
+    split_code = list(filter(None, function_code.splitlines()))
+
+    clean_lines = [split_code[0]]
     docstring_type = ""
 
-    for line in function_code.splitlines():
+    for line in split_code[1:]:
         # Do not count commented line or single line docstring
         if not re.search(COMMENT_REGEX, line) and not re.search(
             ONE_LINE_DOCSTRING_REGEX, line
@@ -125,7 +131,9 @@ def get_clean_function_lines(function: FunctionType) -> list[str]:
             close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
 
             # check if a multi-line docstring has started
-            if open_match and docstring_type == "":
+            # since there is only one line of code before a docstring (the def line)
+            # then when the docstring starts the length of the line list has to be 1
+            if open_match and docstring_type == "" and len(clean_lines) == 1:
                 docstring_type = open_match.group()
 
             # Check if the previous multi-line docstring has closed
