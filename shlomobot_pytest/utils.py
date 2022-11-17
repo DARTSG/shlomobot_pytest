@@ -128,20 +128,22 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
         if not re.search(COMMENT_REGEX, line) and not re.search(
             ONE_LINE_DOCSTRING_REGEX, line
         ):
-            open_match = re.match(OPEN_DOCSTRING_REGEX, line)
-            close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
 
             # check if a multi-line docstring has started
             # since there is only one line of code before a docstring (the def line)
             # then when the docstring starts the length of the line list has to be 1
-            if open_match and docstring_type == "" and len(clean_lines) == 1:
-                docstring_type = open_match.group()
+            if docstring_type == "" and len(clean_lines) == 1:
+                open_match = re.match(OPEN_DOCSTRING_REGEX, line)
+                if open_match:
+                    docstring_type = open_match.group()
 
             # Check if the previous multi-line docstring has closed
-            elif close_match and (close_match.group() == docstring_type):
-                docstring_type = ""
+            elif docstring_type != "":
+                close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
+                if close_match and (close_match.group() == docstring_type):
+                    docstring_type = ""
 
-            elif docstring_type == "":
+            else:
                 clean_lines.append(line)
 
     return clean_lines
@@ -149,6 +151,8 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
 
 def function_contains_regex(regex: str | re.Pattern, function: FunctionType) -> bool:
     """Checks if the function contains a specific regular expression"""
+    if type(regex) != re.Pattern:
+        regex = re.compile(regex)
 
     for line in get_clean_function_lines(function):
         if re.search(regex, line):
