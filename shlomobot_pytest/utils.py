@@ -117,9 +117,7 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
         function_code = format_str(function_code, mode=FileMode(line_length=99999))
 
     # Using filter to remove empty lines from the list of lines
-    split_code = [
-        line.lstrip() for line in list(filter(None, function_code.splitlines()))
-    ]
+    split_code = list(filter(lambda line: line.strip(), function_code.splitlines()))
 
     # The first line will be the definition of the function
     clean_lines = [split_code[0]]
