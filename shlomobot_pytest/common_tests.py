@@ -101,7 +101,7 @@ def builtins_not_used_as_variable(function: FunctionType) -> bool:
     """
     Return True if no builtins are used as variables in the function, else return True
     """
-    builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
+    builtin_used_as_variable = r"^\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
     builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
     builtins_list = [
         word for word in dir(builtins) if word[0] not in string.ascii_uppercase + "_"
