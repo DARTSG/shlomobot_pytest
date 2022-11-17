@@ -103,20 +103,20 @@ def builtins_not_used_as_variable(function: FunctionType) -> bool:
     builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
     builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
     builtins_list = [word for word in dir(builtins) if not re.match("[A-Z|_]", word[0])]
-    functions_lines = get_clean_function_lines(function)
+
     function_name = function.__name__
 
-    for line in functions_lines:
-        # look for all possible builtin words used in the function
-        for builtin_word in builtins_list:
-            builtin_as_variable_regex = builtin_used_as_variable.format(builtin_word)
-            builtin_as_paramater_regex = builtin_given_to_function.format(
-                function_name, builtin_word
-            )
-            occurences_as_variable = re.search(builtin_as_variable_regex, line)
-            occurences_as_paramater = re.search(builtin_as_paramater_regex, line)
-            if occurences_as_variable or occurences_as_paramater:
-                return False
+    # look for all possible builtin words used in the function
+    for builtin_word in builtins_list:
+        builtin_variable_regex = builtin_used_as_variable.format(builtin_word)
+        builtin_paramater_regex = builtin_given_to_function.format(
+            function_name, builtin_word
+        )
+
+        if function_contains_regex(
+            builtin_variable_regex, function
+        ) or function_contains_regex(builtin_paramater_regex, function):
+            return False
 
     return True
 
