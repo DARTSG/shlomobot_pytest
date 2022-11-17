@@ -128,21 +128,20 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
         if not re.search(COMMENT_REGEX, line) and not re.search(
             ONE_LINE_DOCSTRING_REGEX, line
         ):
-            # From second line onward, when no docstring is active add lines to the list
-            if line_num != 0 and docstring_type == "":
-                clean_lines.append(line)
-
             # Check for opening multi-line docstring in the start of the code
             if line_num == 0:
                 open_match = re.match(OPEN_DOCSTRING_REGEX, line)
                 if open_match:
                     docstring_type = open_match.group()
-
-            # Check for closing of multi-line docstring second line onward
-            elif line_num != 0 and docstring_type != "":
-                close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
-                if close_match and (close_match.group() == docstring_type):
-                    docstring_type = ""
+            else:
+                # From second line onward, when no docstring is active add lines to the list
+                if docstring_type == "":
+                    clean_lines.append(line)
+                # Check for closing of multi-line docstring second line onward
+                else:
+                    close_match = re.match(CLOSE_DOCSTRING_REGEX, line)
+                    if close_match and (close_match.group() == docstring_type):
+                        docstring_type = ""
 
     return clean_lines
 
