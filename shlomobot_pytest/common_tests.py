@@ -9,6 +9,7 @@ from shlomobot_pytest.utils import (
     function_contains_regex,
 )
 from types import ModuleType, FunctionType
+import string
 import builtins
 import inspect
 import re
@@ -51,13 +52,13 @@ def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
     functions_list = get_functions_from_files(file_list)
 
     func_missing_docstrings = []
-    for function_name, function in functions_list:
+    for function in functions_list:
         # Skip checking docstrings for 'main' function
-        if function_name == "main":
+        if function.__name__ == "main":
             continue
         # Handle missing docstrings
         if not function.__doc__:
-            func_missing_docstrings.append(function_name)
+            func_missing_docstrings.append(function.__name__)
 
     return func_missing_docstrings
 
@@ -70,7 +71,7 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
     single_quote_docstrings = []
     functions_list = get_functions_from_files(file_list)
 
-    for function_name, function in functions_list:
+    for function in functions_list:
         # Skip checking docstrings for 'main' function
         if function.__name__ == "main":
             continue
@@ -79,7 +80,7 @@ def find_functions_with_single_quote_docstrings(file_list: list[str]) -> list[st
             func_code = inspect.getsource(function)
             dbl_quotes_docstring = re.search(r"\"\"\"[\s\S]*?\"\"\"", func_code)
             if not dbl_quotes_docstring:
-                single_quote_docstrings.append(function_name)
+                single_quote_docstrings.append(function.__name__)
 
     return single_quote_docstrings
 
@@ -102,20 +103,20 @@ def builtins_not_used_as_variable(function: FunctionType) -> bool:
     """
     builtin_used_as_variable = r"\n\s*(?:[^\s]*? ?, ?)*?{0} ?(?:\s*,\s*[^\W]+?\s*)*=.*"
     builtin_given_to_function = r"def {0}\((?:[^\s]*? ?, ?)*?{1}(?:\s*,\s*[^\W]+?)*\):"
-    builtins_list = [word for word in dir(builtins) if not re.match("[A-Z|_]", word[0])]
-
-    function_name = function.__name__
+    builtins_list = [
+        word for word in dir(builtins) if word[0] not in string.ascii_uppercase + "_"
+    ]
 
     # look for all possible builtin words used in the function
     for builtin_word in builtins_list:
         builtin_variable_regex = builtin_used_as_variable.format(builtin_word)
         builtin_paramater_regex = builtin_given_to_function.format(
-            function_name, builtin_word
+            function.__name__, builtin_word
         )
 
-        if function_contains_regex(
-            builtin_variable_regex, function
-        ) or function_contains_regex(builtin_paramater_regex, function):
+        combined_builtin_regex = f"({builtin_paramater_regex}|{builtin_variable_regex})"
+
+        if function_contains_regex(combined_builtin_regex, function):
             return False
 
     return True

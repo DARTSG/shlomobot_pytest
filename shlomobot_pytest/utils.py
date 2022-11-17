@@ -97,9 +97,7 @@ def import_pyfile(py_filename: str) -> ModuleType:
     return import_module(stripped_module_name)
 
 
-def get_functions_from_files(
-    file_list: list[str],
-) -> Iterator[tuple[str, FunctionType]]:
+def get_functions_from_files(file_list: list[str]) -> Iterator[FunctionType]:
     """
     Extracts all functions from the files in file_list
     Creates a generator that returns a filename, FunctionType object pair
@@ -107,18 +105,21 @@ def get_functions_from_files(
     for py_filename in file_list:
         module = import_pyfile(py_filename)
         for function in extract_functions(module):
-            yield function.__name__, function
+            yield function
 
 
 def get_clean_function_lines(function: FunctionType, should_black=True) -> list[str]:
     """Count the amount on non comment or docstring lines in a function code"""
     function_code = inspect.getsource(function)
 
-    # reformats file to connect split lines and remove empty lines
+    # Reformats file to connect split lines using black
     if should_black:
         function_code = format_str(function_code, mode=FileMode(line_length=99999))
+
+    # Using filter to remove empty lines from the list of lines
     split_code = list(filter(None, function_code.splitlines()))
 
+    # The first line will be the definition of the function
     clean_lines = [split_code[0]]
     docstring_type = ""
 
