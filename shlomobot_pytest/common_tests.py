@@ -15,8 +15,8 @@ import inspect
 import re
 
 GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
-FROM_IMPORT_REGEX = re.compile(r"from (\w+) import \w+(?: ?, ?\w+)*")
-IMPORT_REGEX = re.compile(r"import (\w+)")
+FROM_IMPORT_REGEX = re.compile(r"(?:^|\n)\s*from (\w+) import \w+(?: ?, ?\w+)*")
+IMPORT_REGEX = re.compile(r"(?:^|\n)\s*import (\w+)")
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
