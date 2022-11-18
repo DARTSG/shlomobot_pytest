@@ -1,6 +1,14 @@
 """
 This module contains test functions that are optional for the test files depending on question requirements
 """
+
+# ================= IMPORTS =================
+
+import re
+import string
+import inspect
+import builtins
+from types import FunctionType
 from shlomobot_pytest.utils import (
     extract_functions_in_order,
     import_pyfile,
@@ -8,13 +16,24 @@ from shlomobot_pytest.utils import (
     get_clean_function_lines,
     function_contains_regex,
 )
-from types import ModuleType, FunctionType
-import string
-import builtins
-import inspect
-import re
 
+# ================= CONSTANTS =================
+
+INPUT_REGEX = re.compile(r"input\(\w+")
+WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
+ABSOLUTE_PATH_REGEX_WINDOWS_PARAM = re.compile(
+    r'\((?:[^\s]*? ?, ?)*?[\'"][a-zA-Z]:.*\)\s*$'
+)
+WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
+FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
+LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
+ABSOLUTE_PATH_REGEX_UNIX = re.compile(r'\w+\s*=\s*[\'"]\/\w+')
+ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r'\w+\s*=\s*[\'"][a-zA-Z]:')
+ABSOLUTE_PATH_REGEX_UNIX_PARAM = re.compile(r'\((?:[^\s]*? ?, ?)*?[\'"]\/.*\)\s*$')
 GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
+LIST_COMPREHENTION_REGEX = re.compile(
+    r"\[\s*[\w\.\(\)'\"]+\s+(?:if .*? else [\w\.\(\)'\"]+\s+)?for\s+\w+\s+in\s+[\w\.\(\)'\"]+\s*(?:if .*)?\]"
+)
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
@@ -138,3 +157,36 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
         return len(get_clean_function_lines(getattr(module, function_name))) == 2
 
     return False
+
+
+def function_contains_input(function: FunctionType) -> bool:
+    return function_contains_regex(INPUT_REGEX, function)
+
+
+def function_contains_lambda(function: FunctionType) -> bool:
+    return function_contains_regex(LAMBDA_REGEX, function)
+
+
+def function_contains_for_loop(function: FunctionType) -> bool:
+    return function_contains_regex(FOR_LOOP_REGEX, function)
+
+
+def function_contains_with_open(function: FunctionType) -> bool:
+    return function_contains_regex(WITH_OPEN_REGEX, function)
+
+
+def function_contains_while_loop(function: FunctionType) -> bool:
+    return function_contains_regex(WHILE_LOOP_REGEX, function)
+
+
+def function_contains_absolute_paths(function: FunctionType) -> bool:
+    return (
+        function_contains_regex(ABSOLUTE_PATH_REGEX_UNIX, function)
+        or function_contains_regex(ABSOLUTE_PATH_REGEX_UNIX_PARAM, function)
+        or function_contains_regex(ABSOLUTE_PATH_REGEX_WINDOWS, function)
+        or function_contains_regex(ABSOLUTE_PATH_REGEX_WINDOWS_PARAM, function)
+    )
+
+
+def function_contains_list_comprehention(function: FunctionType) -> bool:
+    return function_contains_regex(LIST_COMPREHENTION_REGEX, function)
