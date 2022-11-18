@@ -141,11 +141,9 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 
 
 def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
-    """Checks if the sutdent imported all the required modules from import_list"""
+    """Checks if the all the required modules from import_list have been imported"""
     module = import_pyfile(module_name)
     module_code = inspect.getsource(module)
-
     modules_list = re.findall(r"import (\w+)", module_code)
 
-    return all([True if module in modules_list else False for module in import_list])
-
+    return all([module in modules_list for module in import_list])

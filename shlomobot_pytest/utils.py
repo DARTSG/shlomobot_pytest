@@ -10,8 +10,14 @@ from importlib import import_module
 from black import format_str, FileMode
 from types import ModuleType, FunctionType
 import pytest
-import sys
-from io import StringIO
+
+# ================= CONSTANTS =================
+
+ONE_LINE_DOCSTRING_REGEX = re.compile(r'^\t*\s*[\'"]+\w+[\'"]+')
+OPEN_DOCSTRING_REGEX = re.compile(r'^[\t\s]*?([\'"]{3})')
+CLOSE_DOCSTRING_REGEX = re.compile(r'.*?([\'"]{3})$')
+COMMENT_REGEX = re.compile(r"^\t*\s*#")
+DEFINE_REGEX = re.compile(r"^\s*def ")
 
 
 @pytest.fixture()
