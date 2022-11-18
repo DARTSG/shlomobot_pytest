@@ -16,7 +16,7 @@ import re
 
 GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
 FROM_IMPORT_REGEX = re.compile(r"(?:^|\n)\s*from (\w+) import \w+(?: ?, ?\w+)*")
-IMPORT_REGEX = re.compile(r"(?:^|\n)\s*import (\w+)")
+IMPORT_REGEX = re.compile(r"(?:^|\n)\s*import (.*)")
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
@@ -146,7 +146,15 @@ def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
     """Checks if the all the required modules from import_list have been imported"""
     module = import_pyfile(module_name)
     module_code = inspect.getsource(module)
-    modules_list = re.findall(IMPORT_REGEX, module_code)
-    modules_list += re.findall(FROM_IMPORT_REGEX, module_code)
+    from_modules_list = re.findall(FROM_IMPORT_REGEX, module_code)
 
-    return all([module in modules_list for module in import_list])
+    # Take all lines of regular imports, join all of the modules by comma
+    # Then split all lines by comma to get a list of all seperate modules and strip each module of spaces
+    import_module_list = [
+        module.strip()
+        for module in ", ".join(re.findall(IMPORT_REGEX, module_code)).split(",")
+    ]
+
+    return all(
+        [module in from_modules_list + import_module_list for module in import_list]
+    )
