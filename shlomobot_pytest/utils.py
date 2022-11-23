@@ -133,6 +133,8 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
                 open_match = re.match(OPEN_DOCSTRING_REGEX, line)
                 if open_match:
                     docstring_type = open_match.group()
+                else:
+                    clean_lines.append(line)
             else:
                 # From second line onward, when no docstring is active add lines to the list
                 if docstring_type == "":
