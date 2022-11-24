@@ -19,7 +19,7 @@ from shlomobot_pytest.utils import (
 
 # ================= CONSTANTS =================
 
-INPUT_REGEX = re.compile(r"input\(\w+")
+INPUT_REGEX = re.compile(r"input\((\"|')?\w+")
 WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
 ABSOLUTE_PATH_REGEX_WINDOWS_PARAM = re.compile(
     r'\((?:[^\s]*? ?, ?)*?[\'"][a-zA-Z]:.*\)\s*$'
