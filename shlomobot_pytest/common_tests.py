@@ -7,6 +7,7 @@ from shlomobot_pytest.utils import (
     get_functions_from_files,
     get_clean_function_lines,
     function_contains_regex,
+    get_function_regex_matches,
 )
 from types import FunctionType
 import string
@@ -15,6 +16,8 @@ import inspect
 import re
 
 GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
+OPEN_FILE_REGEX = re.compile(r"(\w*) = open\(")
+CLOSE_FILE_REGEX = re.compile(r"(\w*)\.close\(\)")
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
@@ -148,9 +151,6 @@ def every_opened_file_is_closed(file_list: list[str]) -> bool:
 
     functions_list = get_functions_from_files(file_list)
 
-    open_regex = r"(\w+)\s*=\s*open\("
-    close_regex = r"{0}\.close\("
-
     files_not_yet_closed = []
 
     for function in functions_list:
@@ -170,3 +170,26 @@ def every_opened_file_is_closed(file_list: list[str]) -> bool:
                 files_not_yet_closed.remove((file_name, new_close_regex))
 
     return len(files_not_yet_closed) == 0
+
+
+def get_function_unclosed_files(function: FunctionType) -> list[str]:
+    """
+    Returns a list of variable names for files that are opened but not closed
+
+    This does not count files opened using with statements
+    """
+
+    open_file_lines = get_function_regex_matches(OPEN_FILE_REGEX, function)
+    close_file_lines = get_function_regex_matches(CLOSE_FILE_REGEX, function)
+
+    opened_file_variables = dict()
+    for line_content, line_number in open_file_lines:
+        variable_name = re.search(OPEN_FILE_REGEX, line_content)[1]
+        opened_file_variables[variable_name] = line_number
+    
+    for line_content, line_number in close_file_lines:
+        variable_name = CLOSE_FILE_REGEX.search(line_content)[1]
+        if variable_name in opened_file_variables and opened_file_variables[variable_name] < line_number:
+            del opened_file_variables[variable_name]
+    
+    return list(opened_file_variables.keys())
