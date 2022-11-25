@@ -16,6 +16,7 @@ from shlomobot_pytest.utils import (
     get_functions_from_files,
     get_clean_function_lines,
     function_contains_regex,
+    get_function_regex_matches,
 )
 
 # ================= CONSTANTS =================
@@ -31,6 +32,8 @@ GLOBAL_DECLARATION_REGEX = re.compile(r"^[ \t]*global[ \t]+\w*(?:, *\w+)*(?=[ \t
 LIST_COMPREHENTION_REGEX = re.compile(
     r"\[\s*[\w\.\(\)'\"]+\s+(?:if .*? else [\w\.\(\)'\"]+\s+)?for\s+\w+\s+in\s+[\w\.\(\)'\"]+\s*(?:if .*)?\]"
 )
+OPEN_FILE_REGEX = re.compile(r"(\w*) = open\(")
+CLOSE_FILE_REGEX = re.compile(r"(\w*)\.close\(\)")
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
@@ -210,3 +213,32 @@ def function_contains_absolute_paths(function: FunctionType) -> bool:
 
 def function_contains_list_comprehention(function: FunctionType) -> bool:
     return function_contains_regex(LIST_COMPREHENTION_REGEX, function)
+
+
+def every_opened_file_is_closed(function: FunctionType) -> bool:
+    """
+    Checks if a function closes all files it opens using open()
+
+    This does not count files opened using with statements
+    """
+
+    # Get lines that open or close files
+    open_file_lines = get_function_regex_matches(OPEN_FILE_REGEX, function)
+    close_file_lines = get_function_regex_matches(CLOSE_FILE_REGEX, function)
+
+    # Dict to record files that are opened but not close
+    opened_file_variables: dict[str, int] = dict()
+
+    # Populate dict with variables to opened files
+    for line_content, line_number in open_file_lines:
+        variable_name = re.search(OPEN_FILE_REGEX, line_content)[1]
+        opened_file_variables[variable_name] = line_number
+    
+    # Remove variables that are closed after opening
+    for line_content, line_number in close_file_lines:
+        variable_name = CLOSE_FILE_REGEX.search(line_content)[1]
+        if variable_name in opened_file_variables and opened_file_variables[variable_name] < line_number:
+            del opened_file_variables[variable_name]
+    
+    # Return true if opened_file_variables is empty (no variables left unclosed)
+    return not bool(opened_file_variables)
