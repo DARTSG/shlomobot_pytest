@@ -251,17 +251,23 @@ def get_function_unclosed_files(function: FunctionType) -> list[str]:
     This does not count files opened using with statements
     """
 
+    # Get lines that open or close files
     open_file_lines = get_function_regex_matches(OPEN_FILE_REGEX, function)
     close_file_lines = get_function_regex_matches(CLOSE_FILE_REGEX, function)
 
-    opened_file_variables = dict()
+    # Dict to record files that are opened but not close
+    opened_file_variables: dict[str, int] = dict()
+
+    # Populate dict with variables to opened files
     for line_content, line_number in open_file_lines:
         variable_name = re.search(OPEN_FILE_REGEX, line_content)[1]
         opened_file_variables[variable_name] = line_number
     
+    # Remove variables that are closed after opening
     for line_content, line_number in close_file_lines:
         variable_name = CLOSE_FILE_REGEX.search(line_content)[1]
         if variable_name in opened_file_variables and opened_file_variables[variable_name] < line_number:
             del opened_file_variables[variable_name]
     
+    # Return remaining variables
     return list(opened_file_variables.keys())
