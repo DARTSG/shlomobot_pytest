@@ -215,35 +215,6 @@ def function_contains_list_comprehention(function: FunctionType) -> bool:
     return function_contains_regex(LIST_COMPREHENTION_REGEX, function)
 
 
-def every_opened_file_is_closed(file_list: list[str]) -> bool:
-    """
-    Checks if all files opened in the module given are also closed
-    Only checks for files not using the with open method
-    """
-
-    functions_list = get_functions_from_files(file_list)
-
-    files_not_yet_closed = []
-
-    for function in functions_list:
-        # function is a tuple of the function name and object, but in this case only the object is needed
-        function_code = inspect.getsource(function[1])
-        file_names = re.findall(OPEN_FILE_REGEX, function_code)
-        for file_name in file_names:
-            new_close_regex = CLOSE_FILE_REGEX.format(file_name)
-            if not re.search(new_close_regex, function_code):
-                files_not_yet_closed.append((file_name, new_close_regex))
-
-    tmp_files_not_closed_list = files_not_yet_closed.copy()
-    for function in functions_list:
-        function_code = inspect.getsource(function[1])
-        for file_name, new_close_regex in tmp_files_not_closed_list:
-            if re.search(new_close_regex, function_code):
-                files_not_yet_closed.remove((file_name, new_close_regex))
-
-    return len(files_not_yet_closed) == 0
-
-
 def function_closes_all_files(function: FunctionType) -> bool:
     """
     Checks if a function closes all files it opens using open()
