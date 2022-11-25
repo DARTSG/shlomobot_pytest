@@ -158,3 +158,17 @@ def function_contains_regex(regex: str | re.Pattern, function: FunctionType) -> 
             return True
 
     return False
+
+
+def get_function_regex_matches(regex: str | re.Pattern, function: FunctionType) -> list[tuple[str, int]]:
+    """
+    Returns a tuple (line content, line number) for each match
+    of the given regex in the given function's body. The line number
+    is the original
+    """
+    if isinstance(regex, re.Pattern):
+        regex = re.compile(regex)
+
+    cleaned_lines = get_clean_function_lines(function)
+
+    return [(line, index + 1) for index, line in enumerate(cleaned_lines) if re.search(regex, line)]
