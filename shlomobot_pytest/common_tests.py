@@ -27,7 +27,7 @@ LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
 
 ABSOLUTE_PATH_REGEX_UNIX = re.compile(r"(r|f|rf|fr)?[\"'](/([^/ ]+ +)*[^/ ]+)+[\"']")
 ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']")
-GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
+GLOBAL_DECLARATION_REGEX = re.compile(r"^[ \t]*global[ \t]+\w*(, *\w+)*[ \t]*$")
 LIST_COMPREHENTION_REGEX = re.compile(
     r"\[\s*[\w\.\(\)'\"]+\s+(?:if .*? else [\w\.\(\)'\"]+\s+)?for\s+\w+\s+in\s+[\w\.\(\)'\"]+\s*(?:if .*)?\]"
 )
@@ -141,7 +141,7 @@ def function_contains_global_variable(function: FunctionType) -> bool:
     """
     checks if in the function contains a global variable decleration
     """
-    return function_contains_regex(GLOBAL_DECLERATION_REGEX, function)
+    return function_contains_regex(GLOBAL_DECLARATION_REGEX, function)
 
 
 def function_is_one_liner(py_filename: str, function_name: str) -> bool:
