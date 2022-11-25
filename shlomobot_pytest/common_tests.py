@@ -244,9 +244,9 @@ def every_opened_file_is_closed(file_list: list[str]) -> bool:
     return len(files_not_yet_closed) == 0
 
 
-def get_function_unclosed_files(function: FunctionType) -> list[str]:
+def function_closes_all_files(function: FunctionType) -> bool:
     """
-    Returns a list of variable names for files that are opened but not closed
+    Checks if a function closes all files it opens using open()
 
     This does not count files opened using with statements
     """
@@ -269,5 +269,5 @@ def get_function_unclosed_files(function: FunctionType) -> list[str]:
         if variable_name in opened_file_variables and opened_file_variables[variable_name] < line_number:
             del opened_file_variables[variable_name]
     
-    # Return remaining variables
-    return list(opened_file_variables.keys())
+    # Return true if opened_file_variables is empty (no variables left unclosed)
+    return not bool(opened_file_variables)
