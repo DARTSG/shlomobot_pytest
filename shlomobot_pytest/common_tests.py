@@ -15,6 +15,8 @@ import inspect
 import re
 
 GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
+FROM_IMPORT_REGEX = re.compile(r"(?:^|\n)\s*from (\w+) import \w+(?: ?, ?\w+)*")
+IMPORT_REGEX = re.compile(r"(?:^|\n)\s*import (\w+)")
 
 
 def contains_name_eq_main_statement(py_filename: str) -> bool:
@@ -45,7 +47,6 @@ def is_main_function_last(py_filename: str) -> bool:
 def find_functions_with_missing_docstrings(file_list: list[str]) -> list[str]:
     """
     Checks if the user created docstrings for all functions except 'main' function
-
     Returns a list of functions where docstrings are missing
     """
 
@@ -139,3 +140,13 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
         return len(get_clean_function_lines(getattr(module, function_name))) == 2
 
     return False
+
+
+def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
+    """Checks if the all the required modules from import_list have been imported"""
+    module = import_pyfile(module_name)
+    module_code = inspect.getsource(module)
+    modules_list = re.findall(IMPORT_REGEX, module_code)
+    modules_list += re.findall(FROM_IMPORT_REGEX, module_code)
+
+    return all([module in modules_list for module in import_list])
