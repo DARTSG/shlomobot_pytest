@@ -215,7 +215,7 @@ def function_contains_list_comprehention(function: FunctionType) -> bool:
     return function_contains_regex(LIST_COMPREHENTION_REGEX, function)
 
 
-def function_closes_all_files(function: FunctionType) -> bool:
+def every_opened_file_is_closed(function: FunctionType) -> bool:
     """
     Checks if a function closes all files it opens using open()
 
