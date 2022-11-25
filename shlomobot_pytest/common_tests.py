@@ -173,16 +173,14 @@ def function_contains_input(function: FunctionType) -> bool:
 
     for line_number, instruction in enumerate(instructions):
         # Search for a CALL_FUNCTION instruction
-        if instruction.opname != "CALL_FUNCTION":
-            continue
-
-        # Find the instruction that loads the called function
-        load_instruction_line_number = line_number - instruction.arg - 1
-        load_instruction = instructions[load_instruction_line_number]
-    
-        # Check if the load instruction loads the input function
-        if load_instruction.opname == "LOAD_GLOBAL" and load_instruction.argval == "input":
-            return True
+        if instruction.opname == "CALL_FUNCTION":
+            # Find the instruction that loads the called function
+            load_instruction_line_number = line_number - instruction.arg - 1
+            load_instruction = instructions[load_instruction_line_number]
+        
+            # Check if the load instruction loads the input function
+            if load_instruction.opname == "LOAD_GLOBAL" and load_instruction.argval == "input":
+                return True
 
     return False
 
