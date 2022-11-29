@@ -14,18 +14,8 @@ def find_missing_expected_files(file_list: list[str]) -> list[str]:
     """
     wrongly_named_files = []
     for filename in file_list:
-        try:
-            if filename.endswith(".py"):
-                # If its a python file try to import it
-                python_module = filename.removesuffix(".py")
-                import_module(python_module)
-            else:
-                # If not just make sure it exists
-                if not Path(filename).exists():
-                    wrongly_named_files.append(filename)
-        except ImportError:
+        if not Path(filename).exists():
             wrongly_named_files.append(filename)
-
     return wrongly_named_files
 
 
