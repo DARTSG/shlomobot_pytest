@@ -18,6 +18,7 @@ from shlomobot_pytest.utils import (
     function_contains_regex,
     get_function_regex_matches,
 )
+import pytest
 
 # ================= CONSTANTS =================
 
@@ -160,6 +161,7 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
     return False
 
 
+@pytest.mark.skip("Not a pytest function")
 def test_function_exists_and_contains_asserts(module_name: str) -> bool:
     """Checks that the tests function uses assert to test the function"""
 
