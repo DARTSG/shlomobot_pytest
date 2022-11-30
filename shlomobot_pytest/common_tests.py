@@ -160,7 +160,10 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 
 
 def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
-    """Checks if the all the required modules from import_list have been imported"""
+    """
+    Checks if the all the required modules from import_list have been imported.
+    This does not check if unnecessary modules are also imported.
+    """
     module = import_pyfile(module_name)
 
     bytecode = dis.Bytecode(inspect.getsource(module))
