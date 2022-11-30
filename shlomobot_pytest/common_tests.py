@@ -21,8 +21,6 @@ from shlomobot_pytest.utils import (
 # ================= CONSTANTS =================
 
 GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
-FROM_IMPORT_REGEX = re.compile(r"(?:^|\n)\s*from (\w+) import \w+(?: ?, ?\w+)*")
-IMPORT_REGEX = re.compile(r"(?:^|\n)\s*import (\w+)")
 WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
 WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
 FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
@@ -164,11 +162,19 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
     """Checks if the all the required modules from import_list have been imported"""
     module = import_pyfile(module_name)
-    module_code = inspect.getsource(module)
-    modules_list = re.findall(IMPORT_REGEX, module_code)
-    modules_list += re.findall(FROM_IMPORT_REGEX, module_code)
 
-    return all([module in modules_list for module in import_list])
+    bytecode = dis.Bytecode(inspect.getsource(module))
+    instructions = [instruction for instruction in bytecode]
+
+    imported_modules = set()
+
+    for _, instruction in enumerate(instructions):
+        # Search for a IMPORT_NAME instruction
+        if instruction.opname == "IMPORT_NAME":
+            import_name = instruction.argval
+            imported_modules.add(import_name)
+
+    return all([module in imported_modules for module in import_list])
 
 
 def function_contains_input(function: FunctionType) -> bool:
