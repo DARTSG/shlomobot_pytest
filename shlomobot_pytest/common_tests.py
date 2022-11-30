@@ -162,15 +162,19 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 
 
 @pytest.mark.skip("Not a pytest function")
-def test_function_exists_and_contains_asserts(module_name: str) -> bool:
-    """Checks that the tests function uses assert to test the function"""
+def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
+    """Checks that the module contains a test function that uses assert"""
 
-    functions = get_functions_from_files([module_name])
-    test_function = [
-        function for function in functions if function.__name__ == "test"
-    ]
+    module = import_pyfile(py_filename)
+    try:
+        test_function = getattr(module, "test")
 
-    return len(test_function) > 0 and function_contains_regex(ASSERT_REGEX, test_function[0])
+        if not callable(test_function):
+            return False
+
+        return function_contains_regex(ASSERT_REGEX, test_function)
+    except AttributeError:
+        return False
 
 
 def function_contains_input(function: FunctionType) -> bool:
