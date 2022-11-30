@@ -164,7 +164,7 @@ def test_function_exists_and_contains_asserts(module_name: str) -> bool:
 
     functions = get_functions_from_files([module_name])
     test_function = [
-        function for function_name, function in functions if function_name == "test"
+        function for function in functions if function.__name__ == "test"
     ]
 
     return len(test_function) > 0 and " assert " in inspect.getsource(test_function[0])
