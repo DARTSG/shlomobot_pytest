@@ -44,14 +44,13 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
     return wrapper
 
 
-def convert_pyfile_to_function_type(py_filename: str) -> FunctionType:
+def convert_pyfile_to_function_type(py_filename: str):
     """
     Takes the python file that do not contain a function and converts it into a function.
-
     This function returns the FunctionType. 
     """
 
-    temp_filename = "tempfile.py"
+    temp_filename = "studentfile_temp.py"
     trainee_source_code = ""
     trainee_function_name = "trainee_function"
     indentation = "    "
@@ -65,9 +64,9 @@ def convert_pyfile_to_function_type(py_filename: str) -> FunctionType:
     with open(temp_filename, "w") as w:
         w.write(trainee_source_code)
 
-    from tempfile import trainee_function
+    from studentfile_temp import trainee_function
 
-    return trainee_function_name
+    return trainee_function
 
 
 def extract_functions(module: ModuleType) -> list[FunctionType]:
