@@ -18,6 +18,7 @@ OPEN_DOCSTRING_REGEX = re.compile(r'^[\t\s]*?([\'"]{3})')
 CLOSE_DOCSTRING_REGEX = re.compile(r'.*?([\'"]{3})$')
 COMMENT_REGEX = re.compile(r"^\t*\s*#")
 DEFINE_REGEX = re.compile(r"^\s*def ")
+TEMP_FILENAME = "studentfile_temp.py"
 
 
 @pytest.fixture()
@@ -47,10 +48,17 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
 def convert_pyfile_to_function_type(py_filename: str):
     """
     Takes the python file that do not contain a function and converts it into a function.
-    This function returns the FunctionType. 
+    This function returns the FunctionType.
+
+    Take Note when using this function:
+    1) Import the TEMP_FILENAME constant
+    2) Include a teardown function in the test file to remove the created temp file
+
+    Example:
+    def teardown_function():
+        os.remove(TEMP_FILENAME)
     """
 
-    temp_filename = "studentfile_temp.py"
     trainee_source_code = ""
     trainee_function_name = "trainee_function"
     indentation = "    "
@@ -61,7 +69,7 @@ def convert_pyfile_to_function_type(py_filename: str):
 
     trainee_source_code = (f"def {trainee_function_name}():\n{trainee_source_code}")
 
-    with open(temp_filename, "w") as w:
+    with open(TEMP_FILENAME, "w") as w:
         w.write(trainee_source_code)
 
     from studentfile_temp import trainee_function
