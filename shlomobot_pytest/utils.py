@@ -4,6 +4,7 @@ import re
 import sys
 import pytest
 import inspect
+import os
 from io import StringIO
 from typing import Iterator
 from importlib import import_module
@@ -41,6 +42,34 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
         return user_output
 
     return wrapper
+
+
+def convert_pyfile_to_function_type(py_filename: str) -> FunctionType, String:
+    """
+    Takes the python file that do not contain a function and converts it into a function.
+
+    This function returns a pointer to the FunctionType and the sourcecode. 
+    """
+
+    temp_filename = "tempfile.py"
+    trainee_source_code = ""
+    trainee_function_name = "trainee_function"
+    indentation = "    "
+
+    with open(py_filename, "r") as f:
+        for each_line in f.readlines():
+            trainee_source_code += (indentation + each_line)
+
+    trainee_source_code = (f"def {trainee_function_name}():\n{trainee_source_code}")
+
+    with open(temp_filename, "w") as w:
+        w.write(trainee_source_code)
+
+    from tempfile import trainee_function
+
+    os.remove(temp_filename)
+
+    return trainee_function_name, trainee_source_code
 
 
 def extract_functions(module: ModuleType) -> list[FunctionType]:
