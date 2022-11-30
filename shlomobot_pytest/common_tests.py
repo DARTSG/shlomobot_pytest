@@ -25,6 +25,7 @@ WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
 WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
 FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
 LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
+ASSERT_REGEX = re.compile(r"^[ \t]*assert[ \t]*\w+")
 
 ABSOLUTE_PATH_REGEX_UNIX = re.compile(r"(r|f|rf|fr)?[\"'](/([^/ ]+ +)*[^/ ]+)+[\"']")
 ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']")
@@ -167,7 +168,7 @@ def test_function_exists_and_contains_asserts(module_name: str) -> bool:
         function for function in functions if function.__name__ == "test"
     ]
 
-    return len(test_function) > 0 and " assert " in inspect.getsource(test_function[0])
+    return len(test_function) > 0 and function_contains_regex(ASSERT_REGEX, test_function[0])
 
 
 def function_contains_input(function: FunctionType) -> bool:
