@@ -18,9 +18,9 @@ from shlomobot_pytest.utils import (
     function_contains_regex,
     get_function_regex_matches,
 )
+
 # ================= CONSTANTS =================
 
-GLOBAL_DECLERATION_REGEX = re.compile(r"\n\s*global\s+[^\W]+(?:\s*,\s*[^\W]+\s*)*\n")
 WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
 WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
 FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
