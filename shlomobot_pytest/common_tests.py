@@ -163,7 +163,11 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 
 @pytest.mark.skip("Not a pytest function")
 def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
-    """Checks that the module contains a test function that uses assert"""
+    """
+    Checks that the module contains a test function that uses assert.
+    
+    The test function must be named `test`
+    """
 
     module = import_pyfile(py_filename)
     try:
