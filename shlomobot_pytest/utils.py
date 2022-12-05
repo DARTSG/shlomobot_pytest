@@ -4,6 +4,7 @@ import re
 import sys
 import pytest
 import inspect
+import os
 from io import StringIO
 from typing import Iterator
 from importlib import import_module
@@ -12,11 +13,14 @@ from types import ModuleType, FunctionType
 
 # ================= CONSTANTS =================
 
-ONE_LINE_DOCSTRING_REGEX = re.compile(r'^\t*\s*[\'"]+\w+[\'"]+')
-OPEN_DOCSTRING_REGEX = re.compile(r'^[\t\s]*?([\'"]{3})')
-CLOSE_DOCSTRING_REGEX = re.compile(r'.*?([\'"]{3})$')
-COMMENT_REGEX = re.compile(r"^\t*\s*#")
+TEMP_FILENAME = "studentfile_temp.py"
 DEFINE_REGEX = re.compile(r"^\s*def ")
+COMMENT_REGEX = re.compile(r"^\t*\s*#")
+IMPORT_REGEX = re.compile(r"(?:^|\n)\s*import (.+)")
+CLOSE_DOCSTRING_REGEX = re.compile(r'.*?([\'"]{3})$')
+OPEN_DOCSTRING_REGEX = re.compile(r'^[\t\s]*?([\'"]{3})')
+ONE_LINE_DOCSTRING_REGEX = re.compile(r'^\t*\s*[\'"]+\w+[\'"]+')
+FROM_IMPORT_REGEX = re.compile(r"(?:^|\n)\s*from (\w+) import \w+(?: ?, ?\w+)*")
 
 
 @pytest.fixture()
@@ -41,6 +45,38 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
         return user_output
 
     return wrapper
+
+
+def convert_pyfile_to_function_type(py_filename: str):
+    """
+    Takes the python file that do not contain a function and converts it into a function.
+    This function returns the FunctionType.
+
+    Take Note when using this function:
+    1) Import the TEMP_FILENAME constant
+    2) Include a teardown function in the test file to remove the created temp file
+
+    Example:
+    def teardown_function():
+        os.remove(TEMP_FILENAME)
+    """
+
+    trainee_source_code = ""
+    trainee_function_name = "trainee_function"
+    indentation = "    "
+
+    with open(py_filename, "r") as f:
+        for each_line in f.readlines():
+            trainee_source_code += indentation + each_line
+
+    trainee_source_code = f"def {trainee_function_name}():\n{trainee_source_code}"
+
+    with open(TEMP_FILENAME, "w") as w:
+        w.write(trainee_source_code)
+
+    from studentfile_temp import trainee_function
+
+    return trainee_function
 
 
 def extract_functions(module: ModuleType) -> list[FunctionType]:
@@ -133,6 +169,8 @@ def get_clean_function_lines(function: FunctionType, should_black=True) -> list[
                 open_match = re.match(OPEN_DOCSTRING_REGEX, line)
                 if open_match:
                     docstring_type = open_match.group()
+                else:
+                    clean_lines.append(line)
             else:
                 # From second line onward, when no docstring is active add lines to the list
                 if docstring_type == "":
@@ -156,3 +194,33 @@ def function_contains_regex(regex: str | re.Pattern, function: FunctionType) -> 
             return True
 
     return False
+
+
+def get_function_regex_matches(
+    regex: str | re.Pattern, function: FunctionType
+) -> list[tuple[str, int]]:
+    """
+    Returns a tuple (line content, line number) for each match
+    of the given regex in the given function's body. The line number
+    is the original
+    """
+    if isinstance(regex, re.Pattern):
+        regex = re.compile(regex)
+
+    cleaned_lines = get_clean_function_lines(function)
+
+    return [
+        (line, index + 1)
+        for index, line in enumerate(cleaned_lines)
+        if re.search(regex, line)
+    ]
+
+
+def get_imported_modules(module_name: str, import_list: list[str]) -> list[str]:
+    """return a list of all modules imported in the python code"""
+    module = import_pyfile(module_name)
+    module_code = inspect.getsource(module)
+    modules_list = ",".join(re.findall(IMPORT_REGEX, module_code)).split(",")
+    modules_list += re.findall(FROM_IMPORT_REGEX, module_code)
+
+    return [module.strip() for module in modules_list]
