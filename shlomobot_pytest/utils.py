@@ -216,9 +216,9 @@ def get_function_regex_matches(
     ]
 
 
-def get_imported_modules(module_name: str) -> list[str]:
-    """return a list of all modules imported in the python code"""
-    module = import_pyfile(module_name)
+def get_imported_modules(filename: str) -> list[str]:
+    """return a list of all modules imported in the python file"""
+    module = import_pyfile(filename)
     module_code = inspect.getsource(module)
     modules_list = ",".join(re.findall(IMPORT_REGEX, module_code)).split(",")
     modules_list += re.findall(FROM_IMPORT_REGEX, module_code)
