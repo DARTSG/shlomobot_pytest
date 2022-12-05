@@ -27,7 +27,7 @@ WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
 FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
 LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
 ASSERT_REGEX = re.compile(r"^[ \t]*assert[ \t]*\w+")
-INPUT_REGEX = re.compile(r"[^\w]input\(")
+INPUT_REGEX = re.compile(r"(^|[^\w\.])input\([\"']")
 
 ABSOLUTE_PATH_REGEX_UNIX = re.compile(r"(r|f|rf|fr)?[\"'](/([^/ ]+ +)*[^/ ]+)+[\"']")
 ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']")
