@@ -164,7 +164,7 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 
 def correct_imports_are_made(py_filename: str, import_list: list[str]) -> bool:
     """
-    Checks if the all the required modules from import_list have been imported.
+    Checks if all the required modules from import_list have been imported.
     This does not check if unnecessary modules are also imported.
     """
     imported_modules = get_imported_modules(py_filename)
