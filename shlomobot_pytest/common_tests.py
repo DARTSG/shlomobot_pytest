@@ -17,6 +17,7 @@ from shlomobot_pytest.utils import (
     get_clean_function_lines,
     function_contains_regex,
     get_function_regex_matches,
+    get_imported_modules,
 )
 import pytest
 
@@ -161,23 +162,12 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
     return False
 
 
-def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
+def correct_imports_are_made(py_filename: str, import_list: list[str]) -> bool:
     """
     Checks if the all the required modules from import_list have been imported.
     This does not check if unnecessary modules are also imported.
     """
-    module = import_pyfile(module_name)
-
-    bytecode = dis.Bytecode(inspect.getsource(module))
-    instructions = [instruction for instruction in bytecode]
-
-    imported_modules = set()
-
-    for _, instruction in enumerate(instructions):
-        # Search for a IMPORT_NAME instruction
-        if instruction.opname == "IMPORT_NAME":
-            import_name = instruction.argval
-            imported_modules.add(import_name)
+    imported_modules = get_imported_modules(py_filename)
 
     return all([module in imported_modules for module in import_list])
 
