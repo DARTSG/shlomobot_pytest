@@ -24,7 +24,7 @@ import pytest
 
 WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
 WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
-FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
+FOR_LOOP_REGEX = re.compile(r"for \S+ in .*:")
 LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
 ASSERT_REGEX = re.compile(r"^[ \t]*assert[ \t]*\w+")
 
