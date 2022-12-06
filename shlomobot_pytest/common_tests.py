@@ -18,6 +18,7 @@ from shlomobot_pytest.utils import (
     function_contains_regex,
     get_function_regex_matches,
 )
+import pytest
 
 # ================= CONSTANTS =================
 
@@ -25,6 +26,7 @@ WHILE_LOOP_REGEX = re.compile(r"while\s+.+")
 WITH_OPEN_REGEX = re.compile(r"with\s+open\(['\"]")
 FOR_LOOP_REGEX = re.compile(r"for\s+\w+\s+in\s+\w+")
 LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
+ASSERT_REGEX = re.compile(r"^[ \t]*assert[ \t]*\w+")
 
 ABSOLUTE_PATH_REGEX_UNIX = re.compile(r"(r|f|rf|fr)?[\"'](/([^/ ]+ +)*[^/ ]+)+[\"']")
 ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']")
@@ -178,6 +180,26 @@ def correct_imports_are_made(module_name: str, import_list: list[str]) -> bool:
             imported_modules.add(import_name)
 
     return all([module in imported_modules for module in import_list])
+
+
+@pytest.mark.skip("Not a pytest function")
+def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
+    """
+    Checks that the module contains a test function that uses assert.
+    
+    The test function must be named `test`
+    """
+
+    module = import_pyfile(py_filename)
+    try:
+        test_function = getattr(module, "test")
+
+        if not callable(test_function):
+            return False
+
+        return function_contains_regex(ASSERT_REGEX, test_function)
+    except AttributeError:
+        return False
 
 
 def function_contains_input(function: FunctionType) -> bool:
