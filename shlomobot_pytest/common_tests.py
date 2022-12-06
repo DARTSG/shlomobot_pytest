@@ -29,7 +29,9 @@ LAMBDA_REGEX = re.compile(r"lambda (?:[^\s]*? ?, ?)*?\w+\s*:")
 ASSERT_REGEX = re.compile(r"^[ \t]*assert[ \t]*\w+")
 
 ABSOLUTE_PATH_REGEX_UNIX = re.compile(r"(r|f|rf|fr)?[\"'](/([^/ ]+ +)*[^/ ]+)+[\"']")
-ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']")
+ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(
+    r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']"
+)
 GLOBAL_DECLARATION_REGEX = re.compile(r"^[ \t]*global[ \t]+\w*(?:, *\w+)*(?=[ \t]*$)")
 LIST_COMPREHENTION_REGEX = re.compile(
     r"\[\s*[\w\.\(\)'\"]+\s+(?:if .*? else [\w\.\(\)'\"]+\s+)?for\s+\w+\s+in\s+[\w\.\(\)'\"]+\s*(?:if .*)?\]"
@@ -165,7 +167,7 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
 def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
     """
     Checks that the module contains a test function that uses assert.
-    
+
     The test function must be named `test`
     """
 
@@ -202,9 +204,12 @@ def function_contains_input(function: FunctionType) -> bool:
             # Find the instruction that loads the called function
             load_instruction_line_number = line_number - instruction.arg - 1
             load_instruction = instructions[load_instruction_line_number]
-        
+
             # Check if the load instruction loads the input function
-            if load_instruction.opname == "LOAD_GLOBAL" and load_instruction.argval == "input":
+            if (
+                load_instruction.opname == "LOAD_GLOBAL"
+                and load_instruction.argval == "input"
+            ):
                 return True
 
     return False
@@ -227,10 +232,9 @@ def function_contains_while_loop(function: FunctionType) -> bool:
 
 
 def function_contains_absolute_paths(function: FunctionType) -> bool:
-    return (
-        function_contains_regex(ABSOLUTE_PATH_REGEX_UNIX, function)
-        or function_contains_regex(ABSOLUTE_PATH_REGEX_WINDOWS, function)
-    )
+    return function_contains_regex(
+        ABSOLUTE_PATH_REGEX_UNIX, function
+    ) or function_contains_regex(ABSOLUTE_PATH_REGEX_WINDOWS, function)
 
 
 def function_contains_list_comprehention(function: FunctionType) -> bool:
@@ -255,12 +259,23 @@ def every_opened_file_is_closed(function: FunctionType) -> bool:
     for line_content, line_number in open_file_lines:
         variable_name = re.search(OPEN_FILE_REGEX, line_content)[1]
         opened_file_variables[variable_name] = line_number
-    
+
     # Remove variables that are closed after opening
     for line_content, line_number in close_file_lines:
         variable_name = CLOSE_FILE_REGEX.search(line_content)[1]
-        if variable_name in opened_file_variables and opened_file_variables[variable_name] < line_number:
+        if (
+            variable_name in opened_file_variables
+            and opened_file_variables[variable_name] < line_number
+        ):
             del opened_file_variables[variable_name]
-    
+
     # Return true if opened_file_variables is empty (no variables left unclosed)
     return not bool(opened_file_variables)
+
+
+def class_contains_init(filename: str, classname: str) -> bool:
+    """check whether the class in the python file has an init method"""
+    module = import_pyfile(filename)
+    if hasattr(module, classname):
+        return hasattr(getattr(module, classname), "__init__")
+    return False
