@@ -13,7 +13,7 @@ from types import ModuleType, FunctionType
 
 # ================= CONSTANTS =================
 
-ONE_LINE_DOCSTRING_REGEX = re.compile(r'^\t*\s*[\'"]+\w+[\'"]+')
+ONE_LINE_DOCSTRING_REGEX = re.compile(r'^[ \t]*("""|\'\'\').*(\1)[ \t]*$')
 OPEN_DOCSTRING_REGEX = re.compile(r'^[\t\s]*?([\'"]{3})')
 CLOSE_DOCSTRING_REGEX = re.compile(r'.*?([\'"]{3})$')
 COMMENT_REGEX = re.compile(r"^\t*\s*#")
