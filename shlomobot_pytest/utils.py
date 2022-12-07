@@ -240,7 +240,7 @@ def get_imported_modules(py_filename: str) -> set[str]:
     return imported_modules
 
 
-def function_calls_other_function(monkeypatch: pytest.fixture, other_function: str, function: FunctionType):
+def function_calls_other_function(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, bool]:
     """
     Checks if the `function` calls another imported function
 
@@ -252,23 +252,28 @@ def function_calls_other_function(monkeypatch: pytest.fixture, other_function: s
     ```
     """
     # Record to be modified
-    record = False
-
-    other_module_name, other_function_name = other_function.split(".")
-
-    original_function = import_module(other_module_name).__dict__[other_function_name]
-
-    if not callable(original_function):
-        raise TypeError(f"{other_function} is not a callable function")
+    record = dict()
 
     # Intervening function that modifies the record and runs the original function
-    def record_and_run(*args, **kwargs):
-        nonlocal record
-        record = True
-        return original_function(*args, **kwargs)
-    
-    # Monkeypatch the called_function
-    monkeypatch.setattr(other_function, record_and_run)
+    def record_and_run_wrapper(original_function, function_string):
+        def record_and_run(*args, **kwargs):
+            nonlocal record
+            record[function_string] = True
+            return original_function(*args, **kwargs)
+        return record_and_run
+
+    for function_string in function_strings:
+        print(function_string)
+        other_module_name, other_function_name = function_string.split(".")
+        original_function = import_module(other_module_name).__dict__[other_function_name]
+
+        if not callable(original_function):
+            raise TypeError(f"{function_string} is not a callable function")
+
+        record[function_string] = False
+
+        # Monkeypatch the called_function
+        monkeypatch.setattr(function_string, record_and_run_wrapper(original_function, function_string))
 
     # Call the function
     function()
