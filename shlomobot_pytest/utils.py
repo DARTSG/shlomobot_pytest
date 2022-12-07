@@ -238,3 +238,39 @@ def get_imported_modules(py_filename: str) -> set[str]:
             imported_modules.add(import_name)
 
     return imported_modules
+
+
+def function_calls_other_function(monkeypatch: pytest.fixture, other_function: str, function: FunctionType):
+    """
+    Checks if the `function` calls another imported function
+
+    `other_function` is a dot separated import string in the `module.function` format, for example:
+
+    ```py
+    "builtins.input"
+    "AnswerModule.test"
+    ```
+    """
+    # Record to be modified
+    record = False
+
+    other_module_name, other_function_name = other_function.split(".")
+
+    original_function = import_module(other_module_name).__dict__[other_function_name]
+
+    if not callable(original_function):
+        raise TypeError(f"{other_function} is not a callable function")
+
+    # Intervening function that modifies the record and runs the original function
+    def record_and_run(*args, **kwargs):
+        nonlocal record
+        record = True
+        return original_function(*args, **kwargs)
+    
+    # Monkeypatch the called_function
+    monkeypatch.setattr(other_function, record_and_run)
+
+    # Call the function
+    function()
+
+    return record
