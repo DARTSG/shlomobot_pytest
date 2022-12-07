@@ -4,7 +4,7 @@ import re
 import sys
 import pytest
 import inspect
-import os
+import dis
 from io import StringIO
 from typing import Iterator
 from importlib import import_module
@@ -206,3 +206,35 @@ def get_function_regex_matches(regex: str | re.Pattern, function: FunctionType) 
     cleaned_lines = get_clean_function_lines(function)
 
     return [(line, index + 1) for index, line in enumerate(cleaned_lines) if re.search(regex, line)]
+
+
+def get_imported_modules(py_filename: str) -> set[str]:
+    """
+    Returns a set of imported modules in the python file.
+
+    This includes modules imported using the `import` and
+    `from` keywords. For example, given a file with:
+
+    ```py
+    from math import sqrt
+    import re, os
+    ...
+    ```
+
+    The function will return the set `{"math", "re", "os"}`
+    """
+    
+    module = import_pyfile(py_filename)
+
+    bytecode = dis.Bytecode(inspect.getsource(module))
+    instructions = [instruction for instruction in bytecode]
+
+    imported_modules = set()
+
+    for _, instruction in enumerate(instructions):
+        # Search for a IMPORT_NAME instruction
+        if instruction.opname == "IMPORT_NAME":
+            import_name = instruction.argval
+            imported_modules.add(import_name)
+
+    return imported_modules

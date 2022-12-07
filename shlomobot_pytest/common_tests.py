@@ -17,6 +17,7 @@ from shlomobot_pytest.utils import (
     get_clean_function_lines,
     function_contains_regex,
     get_function_regex_matches,
+    get_imported_modules,
 )
 import pytest
 
@@ -160,6 +161,16 @@ def function_is_one_liner(py_filename: str, function_name: str) -> bool:
         return len(get_clean_function_lines(getattr(module, function_name))) == 2
 
     return False
+
+
+def correct_imports_are_made(py_filename: str, import_list: list[str]) -> bool:
+    """
+    Checks if all the required modules from import_list have been imported.
+    This does not check if unnecessary modules are also imported.
+    """
+    imported_modules = get_imported_modules(py_filename)
+
+    return all([module in imported_modules for module in import_list])
 
 
 @pytest.mark.skip("Not a pytest function")
