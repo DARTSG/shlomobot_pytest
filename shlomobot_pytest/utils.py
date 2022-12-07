@@ -242,9 +242,9 @@ def get_imported_modules(py_filename: str) -> set[str]:
 
 def function_calls_other_function(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, bool]:
     """
-    Checks if the `function` calls another imported function
+    Checks if the `function` calls other imported functions
 
-    `other_function` is a dot separated import string in the `module.function` format, for example:
+    `function_strings` are dot separated import strings in the `module.function` format, for example:
 
     ```py
     "builtins.input"
