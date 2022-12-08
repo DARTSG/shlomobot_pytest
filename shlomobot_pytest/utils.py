@@ -240,7 +240,7 @@ def get_imported_modules(py_filename: str) -> set[str]:
     return imported_modules
 
 
-def function_calls_other_function(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, bool]:
+def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, bool]:
     """
     Checks if the `function` calls other imported functions
 
