@@ -274,3 +274,17 @@ def every_opened_file_is_closed(function: FunctionType) -> bool:
     
     # Return true if opened_file_variables is empty (no variables left unclosed)
     return not bool(opened_file_variables)
+
+
+def function_calls_function(monkeypatch, module_name: str, function_name: str, function: FunctionType) -> bool:
+    """
+    Checks if a `function` calls another function `function_name` in module `module_name`
+
+    This is a simplified wrapper around `function_calls_other_function` that checks for a single
+    function call and returns a single boolean.
+    """
+    function_import_string = f"{module_name}.{function_name}"
+
+    function_call_result = function_calls_other_function(monkeypatch, function, function_import_string)
+
+    return function_call_result[function_import_string]
