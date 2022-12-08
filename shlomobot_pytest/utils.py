@@ -250,6 +250,17 @@ def function_calls_other_function(monkeypatch: pytest.fixture, function: Functio
     "builtins.input"
     "AnswerModule.test"
     ```
+
+    Example usage:
+
+    ```py
+    >>> function_calls_other_function(monkeypatch, trainee_function, "builtins.input", "builtins.max", "AnswerModule.test")
+    {
+      "builtins.input": True,
+      "builtins.max": False,
+      "AnswerModule.test": False,
+    }
+    ```
     """
     # Record to be modified
     record = dict()
