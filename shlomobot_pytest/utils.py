@@ -274,7 +274,6 @@ def function_calls_other_function(monkeypatch: pytest.fixture, function: Functio
         return record_and_run
 
     for function_string in function_strings:
-        print(function_string)
         other_module_name, other_function_name = function_string.split(".")
         original_function = import_module(other_module_name).__dict__[other_function_name]
 
