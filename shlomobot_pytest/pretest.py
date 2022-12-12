@@ -5,6 +5,42 @@ import pep8
 from importlib import import_module
 from pathlib import Path
 
+from shlomobot_pytest.utils import create_custom_error_json
+
+from shlomobot_pytest.common_tests import contains_main_function
+
+from functools import partial
+
+def register_tests(file_function_map, test_contains_main_function=None):
+    """
+    Currently only implemented for test_contains_main_function.
+
+    The way to call this function is this:
+
+    - If there is no change to the feedback and points.
+
+    register_tests(
+        FILE_FUNCTION_MAP,
+        test_contains_main_function={}
+    )
+
+
+    - If there is are changes to the feedback and points.
+    register_tests(
+        FILE_FUNCTION_MAP,
+        test_contains_main_function={
+            "feedback":"Main function where?",
+            "points_per_error":11,
+            "max_points_deducted":11,
+            "number_of_errors":2,
+        }
+    )
+
+    """
+    if test_contains_main_function is not None:
+        new_test_contains_main_function = partial(test_contains_main_function_default, file_function_map, **test_contains_main_function)
+        new_test_contains_main_function()
+
 
 def find_missing_expected_files(file_list: list[str]) -> list[str]:
     """
@@ -73,3 +109,23 @@ def pep8_conformance(file_list: list[str]) -> dict[str, list[str]]:
                 )
 
     return errors
+
+
+def test_contains_main_function_default(
+    FILE_FUNCTION_MAP=dict(),
+    feedback="Where is your main() function?",
+    points_per_error=10,
+    max_points_deducted=10,
+    number_of_errors=1,
+):
+    # Check that the code contains the main() function
+
+    custom_error_message = create_custom_error_json(
+        feedback=feedback,
+        points_per_error=points_per_error,
+        max_points_deducted=max_points_deducted,
+        number_of_errors=number_of_errors,
+    )
+
+    for filename in FILE_FUNCTION_MAP.keys():
+        assert contains_main_function(filename), custom_error_message
