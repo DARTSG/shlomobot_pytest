@@ -1,3 +1,5 @@
+# THIS FILE CAN BE DELETED ALREADY AS ALL THE FUNCTIONS HAVE BEEN MOVED TO COMMON TESTS
+
 """
 This module contain assertion functions whereby points per error
 and max points to be deducted remain primarily default on most occasions;

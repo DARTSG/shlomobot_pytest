@@ -1,117 +1,172 @@
 """This module contains test functions that are primarily needed for all test files"""
-
-from collections import defaultdict
-import pep8
-from importlib import import_module
-from pathlib import Path
+import pytest
 
 from shlomobot_pytest.utils import create_custom_error_json
-
-from shlomobot_pytest.common_tests import contains_main_function
-
 from functools import partial
 
-def register_tests(file_function_map, test_contains_main_function=None):
+from shlomobot_pytest.common_tests import (
+    find_missing_expected_files,
+    find_missing_expected_functions,
+    pep8_conformance,
+    contains_main_function,
+    contains_name_eq_main_statement,
+    is_main_function_last,
+    find_functions_with_missing_docstrings,
+)
+
+def register_tests(
+    file_function_map,
+    test_expected_files_exist=None,
+    test_expected_functions_exist=None,
+    test_pep8_compliant=None,
+    test_contains_main_function=None,
+    test_name_eq_main_statement_exist=None,
+    test_main_function_is_last_function=None,
+    test_docstring_exists=None,
+):
     """
-    Currently only implemented for test_contains_main_function.
-
-    The way to call this function is this:
-
-    - If there is no change to the feedback and points.
-
+    Sample to call the function:
     register_tests(
         FILE_FUNCTION_MAP,
-        test_contains_main_function={}
-    )
-
-
-    - If there is are changes to the feedback and points.
-    register_tests(
-        FILE_FUNCTION_MAP,
+        test_expected_files_exist={},
+        test_expected_functions_exist={},
+        test_pep8_compliant={},
         test_contains_main_function={
             "feedback":"Main function where?",
             "points_per_error":11,
             "max_points_deducted":11,
             "number_of_errors":2,
-        }
+        },
+        test_name_eq_main_statement_exist={
+            "feedback":"Name = Main where?",
+            "points_per_error":12,
+            "max_points_deducted":12,
+        },
+        test_main_function_is_last_function={
+            "feedback":"Why your main not last?",
+        },
+        test_docstring_exists={
+            "feedback":"Docstring Where??",
+        },
+    )
+    """
+    if test_expected_files_exist is not None:
+        global test_expected_files_exist_pretest
+        test_expected_files_exist_pretest = partial(default_test_expected_files_exist, file_function_map, **test_expected_files_exist)
+
+    if test_expected_functions_exist is not None:
+        global test_expected_functions_exist_pretest
+        test_expected_functions_exist_pretest = partial(default_test_expected_functions_exist, file_function_map, **test_expected_functions_exist)
+
+    if test_pep8_compliant is not None:
+        global test_pep8_compliant_pretest
+        test_pep8_compliant_pretest = partial(default_test_pep8_compliant, file_function_map, **test_pep8_compliant)
+
+    if test_contains_main_function is not None:
+        global test_contains_main_function_pretest
+        test_contains_main_function_pretest = partial(default_test_contains_main_function, file_function_map, **test_contains_main_function)
+
+    if test_name_eq_main_statement_exist is not None:
+        global test_name_eq_main_statement_exist_pretest
+        test_name_eq_main_statement_exist_pretest = partial(default_test_name_eq_main_statement_exist, file_function_map, **test_name_eq_main_statement_exist)
+
+    if test_main_function_is_last_function is not None:
+        global test_main_function_is_last_function_pretest
+        test_main_function_is_last_function_pretest = partial(default_test_main_function_is_last_function, file_function_map, **test_main_function_is_last_function)
+
+    if test_docstring_exists is not None:
+        global test_docstring_exists_pretest
+        test_docstring_exists_pretest = partial(default_test_docstring_exists, file_function_map, **test_docstring_exists)
+
+
+@pytest.mark.skip("Not Required")
+def test_expected_files_exist_pretest():
+    return
+
+@pytest.mark.skip("Not Required")
+def test_expected_functions_exist_pretest():
+    return
+
+@pytest.mark.skip("Not Required")
+def test_pep8_compliant_pretest():
+    return
+
+@pytest.mark.skip("Not Required")
+def test_contains_main_function_pretest():
+    return
+
+@pytest.mark.skip("Not Required")
+def test_name_eq_main_statement_exist_pretest():
+    return
+
+@pytest.mark.skip("Not Required")
+def test_main_function_is_last_function_pretest():
+    return
+
+@pytest.mark.skip("Not Required")
+def test_docstring_exists_pretest():
+    return
+
+
+def default_test_expected_files_exist(
+    FILE_FUNCTION_MAP=dict(),
+):
+    # Check user file names
+
+    wrongly_named_files = find_missing_expected_files(FILE_FUNCTION_MAP.keys())
+
+    custom_error_message = create_custom_error_json(
+        feedback=f"The name for the following submitted file(s) are wrong: {', '.join(wrongly_named_files)}",
+        points_per_error=100,
+        max_points_deducted=100,
+        number_of_errors=1,
     )
 
-    """
-    if test_contains_main_function is not None:
-        new_test_contains_main_function = partial(test_contains_main_function_default, file_function_map, **test_contains_main_function)
-        new_test_contains_main_function()
+    assert wrongly_named_files == [], custom_error_message
 
 
-def find_missing_expected_files(file_list: list[str]) -> list[str]:
-    """
-    Check if the user submitted the correct file name
+def default_test_expected_functions_exist(
+    FILE_FUNCTION_MAP=dict(),
+):
+    # Checks user function names
 
-    Returns a list of filenames that were wrongly named
-    """
-    wrongly_named_files = []
-    for filename in file_list:
-        if not Path(filename).exists():
-            wrongly_named_files.append(filename)
-    return wrongly_named_files
+    wrongly_named_functions = find_missing_expected_functions(FILE_FUNCTION_MAP)
 
+    custom_error_message = create_custom_error_json(
+        feedback=f"The name for the following function(s) are wrong: {', '.join(wrongly_named_functions)}",
+        points_per_error=100,
+        max_points_deducted=100,
+        number_of_errors=len(wrongly_named_functions),
+    )
 
-def find_missing_expected_functions(
-    expected_functions_map: dict[str, list[str]]
-) -> list[str]:
-    """
-    Check if all of the expected functions in the submitted python file exist
-
-    expected_functions_map is a dictionary mapping file names to a list of
-    expected functions in that file
-
-    Returns a list of all missing functions
-    """
-    wrongly_named_functions = []
-    for filename, functions in expected_functions_map.items():
-        if not filename.endswith(".py"):
-            raise ValueError("We can only check for functions in python modules")
-
-        python_module = filename.removesuffix(".py")
-        user_file = import_module(python_module)
-        for function in functions:
-            try:
-                callable(getattr(user_file, function))
-            except AttributeError:
-                wrongly_named_functions.append(function)
-
-    return wrongly_named_functions
+    assert wrongly_named_functions == [], custom_error_message
 
 
-def pep8_conformance(file_list: list[str]) -> dict[str, list[str]]:
-    """
-    Test that we conform to PEP8.
+def default_test_pep8_compliant(
+    FILE_FUNCTION_MAP=dict(),
+):
+    # Checks that pep8 is conformed to
 
-    Returns a dictionary with the filename as key and list of Pep8 error comments as values
-    e.g. errors = {
-        "sample_test.py":
-        [
-            "Row 9: Col 30: 'E201' whitespace after '('",
-            "Row 9: Col 71: 'E202' whitespace before ')'"
-        ]
-    }
-    """
-    errors = defaultdict(list)
-    pep8style = pep8.StyleGuide()
+    pep8_errors = pep8_conformance(FILE_FUNCTION_MAP.keys())
 
-    # We loop and test the files for pep8 conformance one by one because otherwise
-    # we won't be able to map errors to the file they came from
-    for python_module in file_list:
-        result = pep8style.check_files([python_module])
-        if result.total_errors != 0:
-            for row, column, error_code, error_message, _ in result._deferred_print:
-                errors[result.filename].append(
-                    f"Row {row}: Col {column}: {error_code} {error_message}"
-                )
+    combined_errors_string_list = []
+    total_num_of_errors = 0
+    for filename, error_messages_list in pep8_errors.items():
+        individual_file_errors_string = f"{filename} - {', '.join(error_messages_list)}"
+        combined_errors_string_list.append(individual_file_errors_string)
+        total_num_of_errors += len(error_messages_list)
 
-    return errors
+    custom_error_message = create_custom_error_json(
+        feedback=f"{'; '.join(combined_errors_string_list)}",
+        points_per_error=5,
+        max_points_deducted=30,
+        number_of_errors=total_num_of_errors,
+    )
+
+    assert pep8_errors == {}, custom_error_message
 
 
-def test_contains_main_function_default(
+def default_test_contains_main_function(
     FILE_FUNCTION_MAP=dict(),
     feedback="Where is your main() function?",
     points_per_error=10,
@@ -129,3 +184,64 @@ def test_contains_main_function_default(
 
     for filename in FILE_FUNCTION_MAP.keys():
         assert contains_main_function(filename), custom_error_message
+
+
+def default_test_name_eq_main_statement_exist(
+    FILE_FUNCTION_MAP=dict(),
+    feedback="Where is the standard boilerplate to call the main() function?",
+    points_per_error=10,
+    max_points_deducted=10,
+    number_of_errors=1,
+):
+    # Check that 'if __name__ == "__main__" statement' exists
+
+    custom_error_message = create_custom_error_json(
+        feedback=feedback,
+        points_per_error=points_per_error,
+        max_points_deducted=max_points_deducted,
+        number_of_errors=number_of_errors,
+    )
+
+    for filename in FILE_FUNCTION_MAP.keys():
+        assert contains_name_eq_main_statement(filename), custom_error_message
+
+
+def default_test_main_function_is_last_function(
+    FILE_FUNCTION_MAP=dict(),
+    feedback="Your main() function should be the last function.",
+    points_per_error=10,
+    max_points_deducted=10,
+    number_of_errors=1,
+):
+    # Check that main() function is the last function
+
+    custom_error_message = create_custom_error_json(
+        feedback=feedback,
+        points_per_error=points_per_error,
+        max_points_deducted=max_points_deducted,
+        number_of_errors=number_of_errors,
+    )
+
+    for filename in FILE_FUNCTION_MAP.keys():
+        assert is_main_function_last(filename), custom_error_message
+
+
+def default_test_docstring_exists(
+    FILE_FUNCTION_MAP=dict(),
+    feedback="You are missing docstrings.",
+    points_per_error=5,
+    max_points_deducted=5,
+    number_of_errors=1,
+):
+    # Check to see if the student have added a docstring for their function
+
+    custom_error_message = create_custom_error_json(
+        feedback=feedback,
+        points_per_error=points_per_error,
+        max_points_deducted=max_points_deducted,
+        number_of_errors=number_of_errors,
+    )
+
+    functions_with_missing_docstring = find_functions_with_missing_docstrings(FILE_FUNCTION_MAP.keys())
+
+    assert len(functions_with_missing_docstring) == 0, custom_error_message
