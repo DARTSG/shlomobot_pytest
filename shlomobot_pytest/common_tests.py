@@ -173,11 +173,10 @@ def correct_imports_are_made(py_filename: str, import_list: list[str]) -> bool:
     return all([module in imported_modules for module in import_list])
 
 
-@pytest.mark.skip("Not a pytest function")
-def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
+def check_test_function_exists_and_contains_asserts(py_filename: str) -> bool:
     """
     Checks that the module contains a test function that uses assert.
-    
+
     The test function must be named `test`
     """
 
