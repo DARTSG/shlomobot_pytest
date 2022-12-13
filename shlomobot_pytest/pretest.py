@@ -25,6 +25,12 @@ def register_tests(
     test_docstring_exists=None,
 ):
     """
+    Steps to use function:
+    1) from shlomobot_pytest.pretest import register_tests
+    2) Assign values to FILE_FUNCTION_MAP
+    3) Call the function with required tests as arguments (Example below)
+    4) from shlomobot_pytest.pretest import *
+
     Sample to call the function:
     register_tests(
         FILE_FUNCTION_MAP,
@@ -49,6 +55,11 @@ def register_tests(
             "feedback":"Docstring Where??",
         },
     )
+
+    Notes:
+    - This function allows flexibility by allowing the test writer to choose whatever test he/she wants.
+    - The first three tests (test_expected_files_exist, test_expected_functions_exist, test_pep8_compliant) just need to ={}
+    - The other tests allows the test writer to change the feedback and points deducted. They can either change one or all.
     """
     if test_expected_files_exist is not None:
         global test_expected_files_exist_pretest
