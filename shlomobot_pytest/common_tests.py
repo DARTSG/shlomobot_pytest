@@ -192,22 +192,6 @@ def check_test_function_exists_and_contains_asserts(py_filename: str) -> bool:
         return False
 
 
-@pytest.mark.skip(("Not a pytest function. This function is "
-                   "deprecated and usages should be replaced "
-                   "with check_test_function_exists_and_contains_asserts"))
-def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
-    """
-    This function is deprecated and usages should be replaced with
-    check_test_function_exists_and_contains_asserts
-
-    Checks that the module contains a test function that uses assert.
-
-    The test function must be named `test`
-    """
-
-    return check_test_function_exists_and_contains_asserts(py_filename)
-
-
 def function_contains_input(function: FunctionType) -> bool:
     """
     Checks if a given function contains a call to the builtin
