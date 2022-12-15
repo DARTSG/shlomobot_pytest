@@ -35,7 +35,9 @@ ASSERT_REGEX = re.compile(r"^[ \t]*assert[ \t]*\w+")
 INPUT_REGEX = re.compile(r"(^|[^\w\.])input\([\"']")
 
 ABSOLUTE_PATH_REGEX_UNIX = re.compile(r"(r|f|rf|fr)?[\"'](/([^/ ]+ +)*[^/ ]+)+[\"']")
-ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']")
+ABSOLUTE_PATH_REGEX_WINDOWS = re.compile(
+    r"(r|f|rf|fr)?[\"'][A-Za-z]:([\\/]([^\ ]+ +)*[^\ ]+)+[\"']"
+)
 GLOBAL_DECLARATION_REGEX = re.compile(r"^[ \t]*global[ \t]+\w*(?:, *\w+)*(?=[ \t]*$)")
 LIST_COMPREHENTION_REGEX = re.compile(
     r"\[\s*[\w\.\(\)'\"]+\s+(?:if .*? else [\w\.\(\)'\"]+\s+)?for\s+\w+\s+in\s+[\w\.\(\)'\"]+\s*(?:if .*)?\]"
@@ -230,10 +232,9 @@ def function_contains_while_loop(function: FunctionType) -> bool:
 
 
 def function_contains_absolute_paths(function: FunctionType) -> bool:
-    return (
-        function_contains_regex(ABSOLUTE_PATH_REGEX_UNIX, function)
-        or function_contains_regex(ABSOLUTE_PATH_REGEX_WINDOWS, function)
-    )
+    return function_contains_regex(
+        ABSOLUTE_PATH_REGEX_UNIX, function
+    ) or function_contains_regex(ABSOLUTE_PATH_REGEX_WINDOWS, function)
 
 
 def function_contains_list_comprehention(function: FunctionType) -> bool:
@@ -258,13 +259,16 @@ def every_opened_file_is_closed(function: FunctionType) -> bool:
     for line_content, line_number in open_file_lines:
         variable_name = re.search(OPEN_FILE_REGEX, line_content)[1]
         opened_file_variables[variable_name] = line_number
-    
+
     # Remove variables that are closed after opening
     for line_content, line_number in close_file_lines:
         variable_name = CLOSE_FILE_REGEX.search(line_content)[1]
-        if variable_name in opened_file_variables and opened_file_variables[variable_name] < line_number:
+        if (
+            variable_name in opened_file_variables
+            and opened_file_variables[variable_name] < line_number
+        ):
             del opened_file_variables[variable_name]
-    
+
     # Return true if opened_file_variables is empty (no variables left unclosed)
     return not bool(opened_file_variables)
 
@@ -336,3 +340,26 @@ def pep8_conformance(file_list: list[str]) -> dict[str, list[str]]:
                 )
 
     return errors
+
+
+def check_function_runs_within_time_limit(
+    function: FunctionType, *args, timeout: int = 1, **kwargs
+) -> bool:
+    """
+    Helper function to check if a function can run within a set time.
+    Returns True if function runs or an exception is raised within time limit , False otherwise.
+    function: function to run
+    args: arguments to pass to function
+    timeout: time in seconds to wait before terminating the function
+    kwargs: keyword arguments to pass to function
+    """
+    from multiprocessing import Process
+
+    process = Process(target=function, args=args, kwargs=kwargs)
+    process.start()
+    process.join(timeout)
+
+    if process.is_alive():
+        process.terminate()
+        return False
+    return True
