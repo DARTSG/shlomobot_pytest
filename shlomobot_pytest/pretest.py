@@ -1,8 +1,10 @@
 """This module contains test functions that are primarily needed for all test files"""
 import pytest
 
-from shlomobot_pytest.utils import create_custom_error_json
 from functools import partial
+from types import FunctionType
+
+from shlomobot_pytest.utils import create_custom_error_json
 
 from shlomobot_pytest.common_tests import (
     find_missing_expected_files,
@@ -14,25 +16,43 @@ from shlomobot_pytest.common_tests import (
     find_functions_with_missing_docstrings,
 )
 
+
+def pytest_decorate(name: str, depends: list[str], function: FunctionType):
+    """
+    This function is used to decorate the pretest with the pytest decorators
+    """
+    
+    @pytest.mark.dependency(
+        name=name, depends=depends,
+    )
+    def wrapper(*args, **kwargs):
+        return function(*args, **kwargs)
+
+    return wrapper
+
+
 def register_tests(
-    file_function_map,
-    test_expected_files_exist=None,
-    test_expected_functions_exist=None,
-    test_pep8_compliant=None,
-    test_contains_main_function=None,
-    test_name_eq_main_statement_exist=None,
-    test_main_function_is_last_function=None,
-    test_docstring_exists=None,
+    MODULE_SCOPE: dict[str, str],
+    file_function_map: dict[str, list[str]]=None,
+    test_expected_files_exist: dict[str, str | int]=None,
+    test_expected_functions_exist: dict[str, str | int]=None,
+    test_pep8_compliant: dict[str, str | int]=None,
+    test_contains_main_function: dict[str, str | int]=None,
+    test_name_eq_main_statement_exist: dict[str, str | int]=None,
+    test_main_function_is_last_function: dict[str, str | int]=None,
+    test_docstring_exists: dict[str, str | int]=None,
 ):
     """
-    Steps to use function:
-    1) from shlomobot_pytest.pretest import register_tests
-    2) Assign values to FILE_FUNCTION_MAP
-    3) Call the function with required tests as arguments (Example below)
-    4) from shlomobot_pytest.pretest import *
+    This function helps to perform the pretests for each test file
 
-    Sample to call the function:
+    Notes:
+    - This function allows flexibility by allowing the test writer to choose whatever test he/she wants.
+    - The first three tests (test_expected_files_exist, test_expected_functions_exist, test_pep8_compliant) just need to ={}
+    - The other tests allows the test writer to change the feedback and points deducted. They can either change one or all.
+
+    Sample for calling this function:
     register_tests(
+        globals(),
         FILE_FUNCTION_MAP,
         test_expected_files_exist={},
         test_expected_functions_exist={},
@@ -56,76 +76,84 @@ def register_tests(
         },
     )
 
-    Notes:
-    - This function allows flexibility by allowing the test writer to choose whatever test he/she wants.
-    - The first three tests (test_expected_files_exist, test_expected_functions_exist, test_pep8_compliant) just need to ={}
-    - The other tests allows the test writer to change the feedback and points deducted. They can either change one or all.
+    When adding new pretests, things to do:
+    1) Add the test name as one of the parameter in the register_tests function
+    2) Add a if condition inside the function to create a partial function
+    3) Add the new pretest function into the code and end the function name with '_pretest'
     """
+
     if test_expected_files_exist is not None:
-        global test_expected_files_exist_pretest
-        test_expected_files_exist_pretest = partial(default_test_expected_files_exist, file_function_map, **test_expected_files_exist)
+        pytest_name = "test_expected_files_exist"
+        pytest_depends = []
+
+        MODULE_SCOPE['test_expected_files_exist'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_expected_files_exist_pretest, file_function_map, **test_expected_files_exist)
+        )
 
     if test_expected_functions_exist is not None:
-        global test_expected_functions_exist_pretest
-        test_expected_functions_exist_pretest = partial(default_test_expected_functions_exist, file_function_map, **test_expected_functions_exist)
+        pytest_name = "test_expected_functions_exist"
+        pytest_depends = ["test_expected_files_exist"]
+
+        MODULE_SCOPE['test_expected_functions_exist'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_expected_functions_exist_pretest, file_function_map, **test_expected_functions_exist)
+        )
 
     if test_pep8_compliant is not None:
-        global test_pep8_compliant_pretest
-        test_pep8_compliant_pretest = partial(default_test_pep8_compliant, file_function_map, **test_pep8_compliant)
+        pytest_name = "test_pep8_compliant"
+        pytest_depends = ["test_expected_functions_exist"]
+
+        MODULE_SCOPE['test_pep8_compliant'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_pep8_compliant_pretest, file_function_map, **test_pep8_compliant)
+        )
 
     if test_contains_main_function is not None:
-        global test_contains_main_function_pretest
-        test_contains_main_function_pretest = partial(default_test_contains_main_function, file_function_map, **test_contains_main_function)
+        pytest_name = "test_contains_main_function"
+        pytest_depends = ["test_expected_functions_exist"]
+
+        MODULE_SCOPE['test_contains_main_function'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_contains_main_function_pretest, file_function_map, **test_contains_main_function)
+        )
 
     if test_name_eq_main_statement_exist is not None:
-        global test_name_eq_main_statement_exist_pretest
-        test_name_eq_main_statement_exist_pretest = partial(default_test_name_eq_main_statement_exist, file_function_map, **test_name_eq_main_statement_exist)
+        pytest_name = "test_name_eq_main_statement_exist"
+        pytest_depends = ["test_contains_main_function"]
+
+        MODULE_SCOPE['test_name_eq_main_statement_exist'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_name_eq_main_statement_exist_pretest, file_function_map, **test_name_eq_main_statement_exist)
+        )
 
     if test_main_function_is_last_function is not None:
-        global test_main_function_is_last_function_pretest
-        test_main_function_is_last_function_pretest = partial(default_test_main_function_is_last_function, file_function_map, **test_main_function_is_last_function)
+        pytest_name = "test_main_function_is_last_function"
+        pytest_depends = ["test_contains_main_function"]
+
+        MODULE_SCOPE['test_main_function_is_last_function'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_main_function_is_last_function_pretest, file_function_map, **test_main_function_is_last_function)
+        )
 
     if test_docstring_exists is not None:
-        global test_docstring_exists_pretest
-        test_docstring_exists_pretest = partial(default_test_docstring_exists, file_function_map, **test_docstring_exists)
+        pytest_name = "test_docstring_exists"
+        pytest_depends = ["test_expected_functions_exist"]
+
+        MODULE_SCOPE['test_docstring_exists'] = pytest_decorate(
+            pytest_name, pytest_depends,
+            partial(test_docstring_exists_pretest, file_function_map, **test_docstring_exists)
+        )
 
 
-@pytest.mark.skip("Not Required")
-def test_expected_files_exist_pretest():
-    return
-
-@pytest.mark.skip("Not Required")
-def test_expected_functions_exist_pretest():
-    return
-
-@pytest.mark.skip("Not Required")
-def test_pep8_compliant_pretest():
-    return
-
-@pytest.mark.skip("Not Required")
-def test_contains_main_function_pretest():
-    return
-
-@pytest.mark.skip("Not Required")
-def test_name_eq_main_statement_exist_pretest():
-    return
-
-@pytest.mark.skip("Not Required")
-def test_main_function_is_last_function_pretest():
-    return
-
-@pytest.mark.skip("Not Required")
-def test_docstring_exists_pretest():
-    return
-
-
-def default_test_expected_files_exist(
-    FILE_FUNCTION_MAP=dict(),
+def test_expected_files_exist_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
 ):
     # Check user file names
 
     wrongly_named_files = find_missing_expected_files(FILE_FUNCTION_MAP.keys())
 
+    from shlomobot_pytest.utils import create_custom_error_json
     custom_error_message = create_custom_error_json(
         feedback=f"The name for the following submitted file(s) are wrong: {', '.join(wrongly_named_files)}",
         points_per_error=100,
@@ -136,12 +164,13 @@ def default_test_expected_files_exist(
     assert wrongly_named_files == [], custom_error_message
 
 
-def default_test_expected_functions_exist(
-    FILE_FUNCTION_MAP=dict(),
+def test_expected_functions_exist_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
 ):
     # Checks user function names
 
     wrongly_named_functions = find_missing_expected_functions(FILE_FUNCTION_MAP)
+    from shlomobot_pytest.utils import create_custom_error_json
 
     custom_error_message = create_custom_error_json(
         feedback=f"The name for the following function(s) are wrong: {', '.join(wrongly_named_functions)}",
@@ -153,8 +182,8 @@ def default_test_expected_functions_exist(
     assert wrongly_named_functions == [], custom_error_message
 
 
-def default_test_pep8_compliant(
-    FILE_FUNCTION_MAP=dict(),
+def test_pep8_compliant_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
 ):
     # Checks that pep8 is conformed to
 
@@ -166,6 +195,7 @@ def default_test_pep8_compliant(
         individual_file_errors_string = f"{filename} - {', '.join(error_messages_list)}"
         combined_errors_string_list.append(individual_file_errors_string)
         total_num_of_errors += len(error_messages_list)
+    from shlomobot_pytest.utils import create_custom_error_json
 
     custom_error_message = create_custom_error_json(
         feedback=f"{'; '.join(combined_errors_string_list)}",
@@ -177,14 +207,15 @@ def default_test_pep8_compliant(
     assert pep8_errors == {}, custom_error_message
 
 
-def default_test_contains_main_function(
-    FILE_FUNCTION_MAP=dict(),
-    feedback="Where is your main() function?",
-    points_per_error=10,
-    max_points_deducted=10,
-    number_of_errors=1,
+def test_contains_main_function_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
+    feedback: str="Where is your main() function?",
+    points_per_error: int=10,
+    max_points_deducted: int=10,
+    number_of_errors: int=1,
 ):
     # Check that the code contains the main() function
+    from shlomobot_pytest.utils import create_custom_error_json
 
     custom_error_message = create_custom_error_json(
         feedback=feedback,
@@ -197,12 +228,12 @@ def default_test_contains_main_function(
         assert contains_main_function(filename), custom_error_message
 
 
-def default_test_name_eq_main_statement_exist(
-    FILE_FUNCTION_MAP=dict(),
-    feedback="Where is the standard boilerplate to call the main() function?",
-    points_per_error=10,
-    max_points_deducted=10,
-    number_of_errors=1,
+def test_name_eq_main_statement_exist_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
+    feedback: str="Where is the standard boilerplate to call the main() function?",
+    points_per_error: int=10,
+    max_points_deducted: int=10,
+    number_of_errors: int=1,
 ):
     # Check that 'if __name__ == "__main__" statement' exists
 
@@ -217,12 +248,12 @@ def default_test_name_eq_main_statement_exist(
         assert contains_name_eq_main_statement(filename), custom_error_message
 
 
-def default_test_main_function_is_last_function(
-    FILE_FUNCTION_MAP=dict(),
-    feedback="Your main() function should be the last function.",
-    points_per_error=10,
-    max_points_deducted=10,
-    number_of_errors=1,
+def test_main_function_is_last_function_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
+    feedback: str="Your main() function should be the last function.",
+    points_per_error: int=10,
+    max_points_deducted: int=10,
+    number_of_errors: int=1,
 ):
     # Check that main() function is the last function
 
@@ -237,12 +268,12 @@ def default_test_main_function_is_last_function(
         assert is_main_function_last(filename), custom_error_message
 
 
-def default_test_docstring_exists(
-    FILE_FUNCTION_MAP=dict(),
-    feedback="You are missing docstrings.",
-    points_per_error=5,
-    max_points_deducted=5,
-    number_of_errors=1,
+def test_docstring_exists_pretest(
+    FILE_FUNCTION_MAP: dict[str, list[str]]=dict(),
+    feedback: str="You are missing docstrings.",
+    points_per_error: int=5,
+    max_points_deducted: int=5,
+    number_of_errors: int=1,
 ):
     # Check to see if the student have added a docstring for their function
 
