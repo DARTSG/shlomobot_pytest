@@ -238,3 +238,55 @@ def get_imported_modules(py_filename: str) -> set[str]:
             imported_modules.add(import_name)
 
     return imported_modules
+
+
+def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, int]:
+    """
+    Checks if the `function` calls other imported functions. Returns a dictionary of function
+    strings and the number of times that function is called during execution.
+
+    `function_strings` are dot separated import strings in the `module.function` format, for example:
+
+    ```py
+    "builtins.input"
+    "AnswerModule.test"
+    ```
+
+    Example usage:
+
+    ```py
+    >>> function_calls_other_function(monkeypatch, trainee_function, "builtins.input", "builtins.max", "AnswerModule.test")
+    {
+      "builtins.input": 1,
+      "builtins.max": 0,
+      "AnswerModule.test": 0,
+    }
+    ```
+    """
+    # Record to be modified
+    record = dict()
+
+    # Intervening function that modifies the record and runs the original function
+    def record_and_run_wrapper(original_function, function_string):
+        def record_and_run(*args, **kwargs):
+            nonlocal record
+            record[function_string] += 1
+            return original_function(*args, **kwargs)
+        return record_and_run
+
+    for function_string in function_strings:
+        other_module_name, other_function_name = function_string.split(".")
+        original_function = import_module(other_module_name).__dict__[other_function_name]
+
+        if not callable(original_function):
+            raise TypeError(f"{function_string} is not a callable function")
+
+        record[function_string] = 0
+
+        # Monkeypatch the called_function
+        monkeypatch.setattr(function_string, record_and_run_wrapper(original_function, function_string))
+
+    # Call the function
+    function()
+
+    return record
