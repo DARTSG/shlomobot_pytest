@@ -19,6 +19,10 @@ from shlomobot_pytest.utils import (
     get_imported_modules,
     function_calls_functions,
 )
+from pathlib import Path
+from importlib import import_module
+from collections import defaultdict
+import pep8
 import pytest
 
 # ================= CONSTANTS =================
@@ -173,11 +177,10 @@ def correct_imports_are_made(py_filename: str, import_list: list[str]) -> bool:
     return all([module in imported_modules for module in import_list])
 
 
-@pytest.mark.skip("Not a pytest function")
-def test_function_exists_and_contains_asserts(py_filename: str) -> bool:
+def check_test_function_exists_and_contains_asserts(py_filename: str) -> bool:
     """
     Checks that the module contains a test function that uses assert.
-    
+
     The test function must be named `test`
     """
 
@@ -284,3 +287,72 @@ def function_calls_function(monkeypatch, module_name: str, function_name: str, f
     function_call_result = function_calls_functions(monkeypatch, function, function_import_string)
 
     return function_call_result[function_import_string]
+
+
+def find_missing_expected_files(file_list: list[str]) -> list[str]:
+    """
+    Check if the user submitted the correct file name
+
+    Returns a list of filenames that were wrongly named
+    """
+    wrongly_named_files = []
+    for filename in file_list:
+        if not Path(filename).exists():
+            wrongly_named_files.append(filename)
+    return wrongly_named_files
+
+
+def find_missing_expected_functions(
+    expected_functions_map: dict[str, list[str]]
+) -> list[str]:
+    """
+    Check if all of the expected functions in the submitted python file exist
+
+    expected_functions_map is a dictionary mapping file names to a list of
+    expected functions in that file
+
+    Returns a list of all missing functions
+    """
+    wrongly_named_functions = []
+    for filename, functions in expected_functions_map.items():
+        if not filename.endswith(".py"):
+            raise ValueError("We can only check for functions in python modules")
+
+        python_module = filename.removesuffix(".py")
+        user_file = import_module(python_module)
+        for function in functions:
+            try:
+                callable(getattr(user_file, function))
+            except AttributeError:
+                wrongly_named_functions.append(function)
+
+    return wrongly_named_functions
+
+
+def pep8_conformance(file_list: list[str]) -> dict[str, list[str]]:
+    """
+    Test that we conform to PEP8.
+
+    Returns a dictionary with the filename as key and list of Pep8 error comments as values
+    e.g. errors = {
+        "sample_test.py":
+        [
+            "Row 9: Col 30: 'E201' whitespace after '('",
+            "Row 9: Col 71: 'E202' whitespace before ')'"
+        ]
+    }
+    """
+    errors = defaultdict(list)
+    pep8style = pep8.StyleGuide()
+
+    # We loop and test the files for pep8 conformance one by one because otherwise
+    # we won't be able to map errors to the file they came from
+    for python_module in file_list:
+        result = pep8style.check_files([python_module])
+        if result.total_errors != 0:
+            for row, column, error_code, error_message, _ in result._deferred_print:
+                errors[result.filename].append(
+                    f"Row {row}: Col {column}: {error_code} {error_message}"
+                )
+
+    return errors
