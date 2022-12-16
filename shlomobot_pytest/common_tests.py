@@ -286,7 +286,7 @@ def function_calls_function(monkeypatch, module_name: str, function_name: str, f
 
     function_call_result = function_calls_functions(monkeypatch, function, function_import_string)
 
-    return function_call_result[function_import_string]
+    return function_call_result[function_import_string] > 0
 
 
 def find_missing_expected_files(file_list: list[str]) -> list[str]:

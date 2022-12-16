@@ -240,9 +240,10 @@ def get_imported_modules(py_filename: str) -> set[str]:
     return imported_modules
 
 
-def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, bool]:
+def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType, *function_strings: str) -> dict[str, int]:
     """
-    Checks if the `function` calls other imported functions
+    Checks if the `function` calls other imported functions. Returns a dictionary of function
+    strings and the number of times that function is called during execution.
 
     `function_strings` are dot separated import strings in the `module.function` format, for example:
 
@@ -256,9 +257,9 @@ def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType
     ```py
     >>> function_calls_other_function(monkeypatch, trainee_function, "builtins.input", "builtins.max", "AnswerModule.test")
     {
-      "builtins.input": True,
-      "builtins.max": False,
-      "AnswerModule.test": False,
+      "builtins.input": 1,
+      "builtins.max": 0,
+      "AnswerModule.test": 0,
     }
     ```
     """
@@ -269,7 +270,7 @@ def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType
     def record_and_run_wrapper(original_function, function_string):
         def record_and_run(*args, **kwargs):
             nonlocal record
-            record[function_string] = True
+            record[function_string] += 1
             return original_function(*args, **kwargs)
         return record_and_run
 
@@ -280,7 +281,7 @@ def function_calls_functions(monkeypatch: pytest.fixture, function: FunctionType
         if not callable(original_function):
             raise TypeError(f"{function_string} is not a callable function")
 
-        record[function_string] = False
+        record[function_string] = 0
 
         # Monkeypatch the called_function
         monkeypatch.setattr(function_string, record_and_run_wrapper(original_function, function_string))
