@@ -5,6 +5,7 @@ import sys
 import pytest
 import inspect
 import dis
+import os
 from io import StringIO
 from typing import Iterator
 from importlib import import_module
@@ -45,12 +46,59 @@ def simulate_python_io(monkeypatch, capsys: pytest.CaptureFixture):
     return wrapper
 
 
+class FunctionTypeProvider:
+    """
+    Wrapper for a `FunctionType` that removes the temporary file
+    automatically.
+
+    This class is to be used with the `with/as` syntax to ensure
+    that the temporary file is removed after the function is called.
+
+    Refer to the docstring of `convert_pyfile_to_function_type` for
+    more information.
+    """
+
+    def __init__(self, func: FunctionType):
+        self.func = func
+
+    def __exit__(self, *_):
+        if os.path.exists(TEMP_FILENAME):
+            os.remove(TEMP_FILENAME)
+
+    def __enter__(self):
+        return self.func
+
+    def __call__(self, *args, **kwargs):
+        """
+        Calls `self.func` with the given arguments.
+
+        This allows the `FunctionTypeProvider` to be called
+        directly as a function without using the `with` statement.
+        This is implemented to support the old usage of the
+        `convert_pyfile_to_function_type` function without the
+        `with` statement.
+        """
+        return self.func(*args, **kwargs)
+
+
 def convert_pyfile_to_function_type(py_filename: str):
     """
-    Takes the python file that do not contain a function and converts it into a function.
-    This function returns the FunctionType.
+    Takes the python file that do not contain a function and converts it into a
+    function. This function returns a `FunctionTypeProvider`, which is used
+    within a `with` statement.
 
-    Take Note when using this function:
+    This function is to be used with the `with` statement to ensure
+    proper cleanup of generated files. An example:
+
+    ```
+    with convert_pyfile_to_function_type("StudentModule.py") as student_function:
+        student_function()
+    ```
+
+    The return type of this function is also callable as the function itself.
+    However this usage without the `with` statement is NOT RECOMMENDED as it
+    requires manual cleanup of the generated file. The usage is as such:
+
     1) Import the TEMP_FILENAME constant
     2) Include a teardown function in the test file to remove the created temp file
 
@@ -74,7 +122,7 @@ def convert_pyfile_to_function_type(py_filename: str):
 
     from studentfile_temp import trainee_function
 
-    return trainee_function
+    return FunctionTypeProvider(trainee_function)
 
 
 def extract_functions(module: ModuleType) -> list[FunctionType]:
